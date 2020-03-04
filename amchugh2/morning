@@ -1,0 +1,10 @@
+#include <stddef.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <cstring>
+#include <fstream>
+#include <iostream>
+#include <cmath>
+
+// Predictor #1: Always taken
+int always_taken
