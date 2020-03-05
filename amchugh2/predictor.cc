@@ -21,54 +21,94 @@ string always_taken(char* file){
 	// Get file input
 	ifstream infile(file);
 	// Total branches
-	int count = 0;
+	int count;
 	// Total correct predictions
-	int correct = 0;
-	// Idk
-	unsigned long long address;
+	int total;
+	// PC address
+	unsigned long long PC;
+	// Decision
+	string decision;
+	// Send to
+	string line;
 	while(getline(infile, line)){
 		stringstream s(line);
-
-}
-
-/*
-// Predictor #2: Never Taken
-// Same concept as AT - > Do not need to calculate anything because always NT
-int never_taken(std::vector<std::string> s){
-	int correct = 0;
-	for(int i = 0; i < s.size(); i++){
-		if(s[i] == "NT"){
+		s >> std::hex >> PC >> decision;
+		// if
+		if(decision == "T"){
 			correct++;
 		}
+		total++;
 	}
-	return correct;
+	return (to_string(correct) + "," + to_string(total));
 }
+
+// Predictor #2: Never Taken
+// Same concept as AT - > Do not need to calculate anything because always NT
+string never_taken(char* file){
+	// Get file input
+	ifstream infile(file);
+	// Total branches
+	int count;
+	// Total correct predictions
+	int total;
+	// PC address
+	unsigned long long PC;
+	// Decision
+	string decision;
+	// Send to
+	string line;
+	while(getline(infile, line)){
+		stringstream s(line);
+		s >> std::hex >> PC >> decision;
+		// if
+		if(decision == "NT"){
+			correct++;
+		}
+		total++;
+	}
+	return (to_string(correct) + "," + to_string(total));
+}
+
 
 // Predictor #3: Bimodal Predictor with Single Bit of History
 // Must hard-code in table size -> will do in main fcn
 // Assume initial state of all prediction counters is Taken ("T")
 // input: test to compare with, unsigned long PC, size of table
-int bimodal_single_bit(std::vector<std::string> test, vector<unsigned long> pc, int size){
-	int correct = 0;
+int bimodal_single_bit(int table_size, char *file){
 	// Create and initialize prediction table
 	std::vector<string> table;
-	for(int i = 0; i < size; i++){
+	for(int i = 0; i < table_size; i++){
 		// Initialize all values to Taken
-		table.push_back("T"); 
+		table.push_back("T");
 	}
-	// Loop through PC
-	for(int i = 0; i < s.size(); i++){
-		// Index into history depending on table size
-		int index = pc[i]%size;
-		if(test[i] == pc[i]){
-			correct++;
-		}
-		else{ // Change for next call
-			test[i] = pc[i];
-		}
-		
-	}
-	return correct;
-}
+	string decision;
+	string line;
+	int count;
+	int total;
+	unsigned long long PC;
 
-*/
+	while(getline(infile, line)){
+		stringstream s(line);
+		s >> std::hex >> addr >> decision;
+		int index = addr % table_size;
+		int table_index = table[index];
+		if(table[index] == "T"){
+			if(decision == "T"){ // match
+				correct++;
+			}
+			else{
+				table[index] == 0;
+			}
+		}
+		if(table[index] == "NT"){
+			if(decision == "NT"){ // match
+				correct++;
+			}
+			else{
+				table[index] = 1;
+			}
+		}
+		count++;
+	}
+	return (to_string(correct) + "," + to_string(total) + ";");
+}
