@@ -5,6 +5,8 @@
 #include <fstream>
 #include <iostream>
 #include <cmath>
+#include <sstream>
+#include <vector>
 
 using namespace std;
 
@@ -18,19 +20,14 @@ using namespace std;
 // Predictor #1: Always Taken
 // Read in entire file as input, because line doesn't matter each prediction will be same
 string always_taken(char* file){
-	// Get file input
 	ifstream infile(file);
-	// Total branches
-	int count;
-	// Total correct predictions
-	int total;
-	// PC address
+	int correct = 0;
+	int total = 0;
 	unsigned long long PC;
-	// Decision
 	string decision;
-	// Send to
 	string line;
-	while(getline(infile, line)){
+
+	while(getline(infile,line)){
 		stringstream s(line);
 		s >> std::hex >> PC >> decision;
 		// if
@@ -44,22 +41,23 @@ string always_taken(char* file){
 
 // Predictor #2: Never Taken
 // Same concept as AT - > Do not need to calculate anything because always NT
-string never_taken(char* file){
+string never_taken(char *file){
 	// Get file input
 	ifstream infile(file);
 	// Total branches
-	int count;
+	int correct = 0;
 	// Total correct predictions
-	int total;
+	int total = 0;
 	// PC address
 	unsigned long long PC;
 	// Decision
 	string decision;
 	// Send to
 	string line;
-	while(getline(infile, line)){
+	while(infile.good()){
+		getline(infile, line);
 		stringstream s(line);
-		s >> std::hex >> PC >> decision;
+		s >> std::hex >> PC >> decision >> std::hex;
 		// if
 		if(decision == "NT"){
 			correct++;
@@ -71,28 +69,31 @@ string never_taken(char* file){
 
 
 // Predictor #3: Bimodal Predictor with Single Bit of History
-// Must hard-code in table size -> will do in main fcn
+// Must hard-code in table size -> will be passed on as parameter
 // Assume initial state of all prediction counters is Taken ("T")
 // input: test to compare with, unsigned long PC, size of table
-int bimodal_single_bit(int table_size, char *file){
+string bimodal_single_bit(int table_size, char *file){
+	// Get file
+	ifstream infile(file);
 	// Create and initialize prediction table
-	std::vector<string> table;
+	int table[table_size];
+
 	for(int i = 0; i < table_size; i++){
 		// Initialize all values to Taken
-		table.push_back("T");
+		table[i] = 1;
 	}
 	string decision;
 	string line;
-	int count;
+	int correct;
 	int total;
 	unsigned long long PC;
 
 	while(getline(infile, line)){
 		stringstream s(line);
-		s >> std::hex >> addr >> decision;
-		int index = addr % table_size;
+		s >> std::hex >> PC >> decision;
+		int index = PC % table_size;
 		int table_index = table[index];
-		if(table[index] == "T"){
+		if(table[index] == 1){
 			if(decision == "T"){ // match
 				correct++;
 			}
@@ -100,7 +101,7 @@ int bimodal_single_bit(int table_size, char *file){
 				table[index] == 0;
 			}
 		}
-		if(table[index] == "NT"){
+		if(table[index] == 0){
 			if(decision == "NT"){ // match
 				correct++;
 			}
@@ -108,7 +109,13 @@ int bimodal_single_bit(int table_size, char *file){
 				table[index] = 1;
 			}
 		}
-		count++;
+		total++;
 	}
-	return (to_string(correct) + "," + to_string(total) + ";");
+	
+	string str = to_string(correct) + "," + to_string(total) + ";";
+	return str;
+}
+
+int main(int argc, char *argv[]){
+	cout << always_taken(argv[0]) << endl;
 }
