@@ -6,26 +6,38 @@
 #include <iostream>
 #include <cmath>
 
+using namespace std;
+
+// Each function will return the number of correct predictions that it
+// makes and the total of number branches in the correct format
+
+// Each input will be the line of the trace, with format 
+// *PC* *OUTCOME* *BRANCH TARGET*
+
 // Return CORRECT: NUMBER OF CORRECT PREDICTIONS FROM EACH BRANCH
 // Predictor #1: Always Taken
-// Do not need to calculate anything because always T
-int always_taken(td::vector<std::string> s){
+// Read in entire file as input, because line doesn't matter each prediction will be same
+string always_taken(char* file){
+	// Get file input
+	ifstream infile(file);
+	// Total branches
+	int count = 0;
+	// Total correct predictions
 	int correct = 0;
-	for(int i = 0, i < s.size(); i++){
-		// Check if correct
-		if(s[i] == "T"){
-			correct++;
-		}
-	}
-	return correct;
+	// Idk
+	unsigned long long address;
+	while(getline(infile, line)){
+		stringstream s(line);
+
 }
 
+/*
 // Predictor #2: Never Taken
 // Same concept as AT - > Do not need to calculate anything because always NT
 int never_taken(std::vector<std::string> s){
 	int correct = 0;
 	for(int i = 0; i < s.size(); i++){
-		if(s[i] == "T"){
+		if(s[i] == "NT"){
 			correct++;
 		}
 	}
@@ -59,4 +71,4 @@ int bimodal_single_bit(std::vector<std::string> test, vector<unsigned long> pc, 
 	return correct;
 }
 
-// Predictor #4: Bimodal Predictor with Double Bit of History
+*/
