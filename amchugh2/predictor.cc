@@ -172,6 +172,61 @@ string bimodal_double_bit(int table_size, char *file){
 	return str;
 }
 
+// Predictor 5: Gshare -> PC XOR'd with GHR to generate index. Fix table size at 2048. 
+string gshare(unsigned int GHL, char *file){
+	// initialize variables
+	int correct;
+	int total;
+	// fixed table size at 2048
+	int table_size = 2048;
+	int table[table_size];
+	// initialize to strongly taken
+	for(int i = 0; i < table_size; i++){
+		table[i] = 3;
+	}
+	unsigned long long addr;
+	unsigned long long target;
+	string behavior;
+	string line;
+	int prediction;
+	int last_bits;
+	correct = 0;
+	total = 0;
+	unsigned int GHR = 0;
+	
+	ifstream infile(file);
+
+	while(getline(infile,line)){
+		stringstream s(line);
+		s >> std::hex >> addr >> behavior >> std::hex >> target;
+		int index = ((GHR ^ addr) % table_size);
+		if(behavior == "T"){
+			if(table[index] == 0 || table[index] == 1){
+				table[index]++;
+			}
+			else{
+				table[index] = 3;
+				correct++;
+			}
+
+			GHR = (((1 << (GHL)) - 1)) & ((GHR << 1) + 1);
+		}
+		else if(behavior == "NT"){
+			if(table[index] == 3 || table[index] == 2){
+				table[index]--;
+			}
+			else{
+				table[index] = 0;
+				correct++;
+			}
+			GHR = (((1 <<(GHL)) - 1)) & (GHR << 1);
+		}
+	total++;
+	}
+	string str = to_string(correct) + "," + to_string(total) + ";";
+	return str;
+}
+
 int main(int argc, char *argv[]){
 	//vector<int> test_vals  = {16, 32, 128, 256, 512, 1024, 2048};
 	/*
@@ -189,7 +244,7 @@ int main(int argc, char *argv[]){
 	cout << bimodal_single_bit(512, argv[1]) << endl;
 	cout << bimodal_single_bit(1024, argv[1]) << endl;
 	cout << bimodal_single_bit(2048, argv[1]) << endl;
-	*/	
+		
 	cout << "Bimodal Double Bit" << endl;
 	cout << bimodal_double_bit(16, argv[1]) << endl;
 	cout << bimodal_double_bit(32, argv[1]) << endl;
@@ -198,4 +253,16 @@ int main(int argc, char *argv[]){
 	cout << bimodal_double_bit(512, argv[1]) << endl;
 	cout << bimodal_double_bit(1024, argv[1]) << endl;
 	cout << bimodal_double_bit(2048, argv[1]) << endl;
+	*/
+
+	cout << "GShare" << endl;
+	cout << gshare(3, argv[1]) << endl;
+	cout << gshare(4, argv[1]) << endl;
+	cout << gshare(5, argv[1]) << endl;
+	cout << gshare(6, argv[1]) << endl;
+	cout << gshare(7, argv[1]) << endl;
+	cout << gshare(8, argv[1]) << endl;
+	cout << gshare(9, argv[1]) << endl;
+	cout << gshare(10, argv[1]) << endl;
+	cout << gshare(11, argv[1]) << endl;
 }
