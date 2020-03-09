@@ -72,18 +72,48 @@ string bimodal_single_bit(int table_size, char *file){
 	// initialize vars
 	ifstream infile(file);
 	unsigned long long addr;
-	//string behavior, line;
 	unsigned long long target;
 	string behavior, line;
 	int correct;
 	int total;
 	int index;
+	
+	string prediction;
+	vector<string> predictions;
+	for(int i = 0; i < table_size; i++){
+		predictions.push_back("T");
+	}
+	
+	while(getline(infile, line)){
+		stringstream s(line);
+		s >> std::hex >> addr >> behavior >> target;
+		int last_bits = (addr & (( 1 << (int)log2(table_size))) - 1);
+		prediction = predictions[last_bits % table_size];
+		if(prediction == "T"){
+			if(behavior == "T"){
+				correct++;
+			}
+			else{
+				predictions[last_bits % table_size] = "NT";
+			}
+		}
+		else if(prediction == "NT"){
+			if(behavior == "NT"){
+				correct++;
+			}
+			else{
+				predictions[last_bits % table_size] = "T";
+		}
+		total++;
+	}
 
+	/*
 	// initialize prediction table
 	bool table[table_size];
 	for(int i = 0; i < table_size; i++){
 		table[i] == true;
 	}
+
 	// get index
 	while(getline(infile, line)){
 		stringstream s(line);
@@ -107,7 +137,9 @@ string bimodal_single_bit(int table_size, char *file){
 			
 		}
 		total++;
-	}	
+	}
+	*/
+
 	string str = to_string(correct) + "," + to_string(total) + ";";
 	return str;
 }
