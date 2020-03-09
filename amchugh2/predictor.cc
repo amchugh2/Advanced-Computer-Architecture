@@ -84,7 +84,7 @@ string bimodal_single_bit(int table_size, char *file){
 
 	string table[table_size];
 	for(int i = 0; i < table_size; i++){
-		table[i] == "T";
+		table[i] = "T";
 	}
 
 	// get index
@@ -92,21 +92,21 @@ string bimodal_single_bit(int table_size, char *file){
 		stringstream s(line);
 		s >> std::hex >> addr >> behavior >> target;
 		//cout << behavior << endl;
-		// FIXME: not getting prediction
+		// FIXME: only getting taken (same output as always taken)
 		last_bits = (addr & ((1 << ((int)log2(table_size))) - 1));
 		if(table[last_bits % table_size] == "T"){
 			if(behavior == "T"){
 				correct++;
 			}
-			else if(behavior == "NT"){
+			if(behavior == "NT"){
 				table[last_bits % table_size] = "T";
 			}
 		}
-		else if(table[last_bits % table_size] == "NT"){
+		if(table[last_bits % table_size] == "NT"){
 			if(behavior == "NT"){
 				correct++;
 			}
-			else if(behavior == "T"){
+			if(behavior == "T"){
 				table[last_bits % table_size] = "NT";
 			}
 		}
