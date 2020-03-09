@@ -69,8 +69,9 @@ string never_taken(char *file){
 // Assume initial state of all prediction counters is Taken ("T")
 // input: test to compare with, unsigned long PC, size of table
 string bimodal_single_bit(int table_size, char *file){
-	// initialize vars
+	// Open file for reading 
 	ifstream infile(file);
+	// Initialize vars
 	unsigned long long addr;
 	unsigned long long target;
 	string behavior, line;
@@ -90,23 +91,26 @@ string bimodal_single_bit(int table_size, char *file){
 	// get index
 	while(getline(infile, line)){
 		stringstream s(line);
-		s >> std::hex >> addr >> behavior >> target;
+		s >> std::hex >> addr >> behavior >> std::hex >> target;
 		//cout << behavior << endl;
-		// FIXME: only getting taken (same output as always taken)
+		// FIXME: saying behavior is always NT
 		last_bits = (addr & ((1 << ((int)log2(table_size))) - 1));
 		if(table[last_bits % table_size] == "T"){
 			if(behavior == "T"){
 				correct++;
 			}
+			// only going here
 			if(behavior == "NT"){
 				table[last_bits % table_size] = "T";
 			}
 		}
 		if(table[last_bits % table_size] == "NT"){
 			if(behavior == "NT"){
+				cout << "got to NT correct" << endl;
 				correct++;
 			}
 			if(behavior == "T"){
+				cout << "got to NT incorrect" << endl;
 				table[last_bits % table_size] = "NT";
 			}
 		}
