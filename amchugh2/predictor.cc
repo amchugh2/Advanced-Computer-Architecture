@@ -69,50 +69,51 @@ string never_taken(char *file){
 // Assume initial state of all prediction counters is Taken ("T")
 // input: test to compare with, unsigned long PC, size of table
 string bimodal_single_bit(int table_size, char *file){
-	// Get file
+	// initialize vars
 	ifstream infile(file);
-	// Create and initialize prediction table
-	int table[table_size];
 	unsigned long long addr;
-	string behavior, line;
+	//string behavior, line;
 	unsigned long long target;
-	int correct, total;
+	string behavior, line;
+	int correct;
+	int total;
+	int index;
 
+	// initialize prediction table
+	bool table[table_size];
 	for(int i = 0; i < table_size; i++){
-		// Initialize all values to Taken
-		table[i] = 1;
+		table[i] == true;
 	}
-
+	// get index
 	while(getline(infile, line)){
 		stringstream s(line);
 		s >> std::hex >> addr >> behavior >> target;
-		int index = addr % table_size;
-		int table_index = table[index];
+		index = addr % table_size;
 		if(behavior == "T"){
-			if(table[index] == 1){ // match
+			if(table[index] == true){
 				correct++;
 			}
-			else{
-				table[index] == 0;
+			else if(table[index] == false){
+				table[index] = true;
 			}
 		}
 		if(behavior == "NT"){
-			if(table[index] == 0){ // match
+			if(table[index] == false) {
 				correct++;
 			}
-			else{
-				table[index] = 1;
+			else if(table[index] == true){
+				table[index] = false;
 			}
+			
 		}
 		total++;
-	}
-	
+	}	
 	string str = to_string(correct) + "," + to_string(total) + ";";
 	return str;
 }
 
 int main(int argc, char *argv[]){
-	cout << always_taken(argv[0]) << endl;
-	cout << never_taken(argv[0]) << endl;
-	cout << bimodal_single_bit(argv[0]) << endl;
+	cout << always_taken(argv[1]) << endl;
+	cout << never_taken(argv[1]) << endl;
+	cout << bimodal_single_bit(16, argv[1]) << endl;
 }
