@@ -74,75 +74,47 @@ string bimodal_single_bit(int table_size, char *file){
 	unsigned long long addr;
 	unsigned long long target;
 	string behavior, line;
-	int correct;
+	int correct = 0;
 	int total;
 	int index;
-	
 	string prediction;
-	vector<string> predictions;
-	for(int i = 0; i < table_size; i++){
-		predictions.push_back("T");
-	}
-	
-	while(getline(infile, line)){
-		stringstream s(line);
-		s >> std::hex >> addr >> behavior >> target;
-		int last_bits = (addr & (( 1 << (int)log2(table_size))) - 1);
-		prediction = predictions[last_bits % table_size];
-		if(prediction == "T"){
-			if(behavior == "T"){
-				correct++;
-			}
-			else{
-				predictions[last_bits % table_size] = "NT";
-			}
-		}
-		else if(prediction == "NT"){
-			if(behavior == "NT"){
-				correct++;
-			}
-			else{
-				predictions[last_bits % table_size] = "T";
-		}
-		total++;
-	}
+	int last_bits;
 
-	/*
-	// initialize prediction table
-	bool table[table_size];
+	//prediction = predictions[last_bits % table_size];
+
+	string table[table_size];
 	for(int i = 0; i < table_size; i++){
-		table[i] == true;
+		table[i] == "T";
 	}
 
 	// get index
 	while(getline(infile, line)){
 		stringstream s(line);
 		s >> std::hex >> addr >> behavior >> target;
-		index = addr % table_size;
-		if(behavior == "T"){
-			if(table[index] == true){
+		//cout << behavior << endl;
+		// FIXME: not getting prediction
+		last_bits = (addr & ((1 << ((int)log2(table_size))) - 1));
+		if(table[last_bits % table_size] == "T"){
+			if(behavior == "T"){
 				correct++;
 			}
-			else if(table[index] == false){
-				table[index] = true;
+			else if(behavior == "NT"){
+				table[last_bits % table_size] = "T";
 			}
 		}
-		if(behavior == "NT"){
-			if(table[index] == false) {
+		else if(table[last_bits % table_size] == "NT"){
+			if(behavior == "NT"){
 				correct++;
 			}
-			else if(table[index] == true){
-				table[index] = false;
+			else if(behavior == "T"){
+				table[last_bits % table_size] = "NT";
 			}
-			
 		}
 		total++;
 	}
-	*/
-
 	string str = to_string(correct) + "," + to_string(total) + ";";
 	return str;
-}
+	}
 
 int main(int argc, char *argv[]){
 	cout << always_taken(argv[1]) << endl;
