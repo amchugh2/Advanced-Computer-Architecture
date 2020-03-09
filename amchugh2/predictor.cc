@@ -54,6 +54,7 @@ string never_taken(char *file){
 	while(getline(infile,line)){
 		stringstream s(line);
 		s >> std::hex >> addr >> behavior >> std::hex >> target;
+		//cout << behavior << endl;
 		if(behavior == "NT"){
 			correct++;
 		}
@@ -70,18 +71,18 @@ string never_taken(char *file){
 // input: test to compare with, unsigned long PC, size of table
 string bimodal_single_bit(int table_size, char *file){
 	// Open file for reading 
-	ifstream infile(file);
 	// Initialize vars
 	unsigned long long addr;
-	unsigned long long target;
 	string behavior, line;
-	int correct = 0;
-	int total;
+	unsigned long long target;
+	int correct, total;
+	correct = 0;
+	total = 0;
 	int index;
 	string prediction;
 	int last_bits;
 
-	//prediction = predictions[last_bits % table_size];
+	ifstream infile(file);
 
 	string table[table_size];
 	for(int i = 0; i < table_size; i++){
@@ -89,28 +90,28 @@ string bimodal_single_bit(int table_size, char *file){
 	}
 
 	// get index
-	while(getline(infile, line)){
+	while(getline(infile,line)){
 		stringstream s(line);
 		s >> std::hex >> addr >> behavior >> std::hex >> target;
-		//cout << behavior << endl;
+		
 		// FIXME: saying behavior is always NT
 		last_bits = (addr & ((1 << ((int)log2(table_size))) - 1));
-		if(table[last_bits % table_size] == "T"){
-			if(behavior == "T"){
+		if(behavior == "T"){
+			if(table[last_bits % table_size] == "T"){
 				correct++;
 			}
 			// only going here
-			if(behavior == "NT"){
+			if(table[last_bits % table_size] == "NT"){
 				table[last_bits % table_size] = "T";
 			}
 		}
-		if(table[last_bits % table_size] == "NT"){
-			if(behavior == "NT"){
-				cout << "got to NT correct" << endl;
+		else if(behavior == "NT"){
+			if(table[last_bits % table_size] == "NT"){
+			//	cout << "got to NT correct" << endl;
 				correct++;
 			}
-			if(behavior == "T"){
-				cout << "got to NT incorrect" << endl;
+			if(table[last_bits % table_size] == "T"){
+			//	cout << "got to NT incorrect" << endl;
 				table[last_bits % table_size] = "NT";
 			}
 		}
