@@ -119,10 +119,59 @@ string bimodal_single_bit(int table_size, char *file){
 	}
 	string str = to_string(correct) + "," + to_string(total) + ";";
 	return str;
+}
+// Predictor 4: Binomial Double Bit
+string bimodal_double_bit(int table_size, char *file){
+	// Open file for reading 
+	// Initialize vars
+	unsigned long long addr;
+	string behavior, line;
+	unsigned long long target;
+	int correct, total;
+	correct = 0;
+	total = 0;
+	int index;
+	int prediction;
+	int last_bits;
+
+	ifstream infile(file);
+
+	int table[table_size];
+	for(int i = 0; i < table_size; i++){
+		table[i] = 3;
 	}
 
+	// get index
+	while(getline(infile,line)){
+		stringstream s(line);
+		s >> std::hex >> addr >> behavior >> std::hex >> target;
+
+		// FIXME: saying behavior is always NT
+		last_bits = (addr & ((1 << ((int)log2(table_size))) - 1));
+		// strongly or weakly not taken
+		if(table[last_bits % table_size] == 11 || table[last_bits % table_size] == 10){
+			if(behavior == 4){
+				correct++;
+			}
+
+		total++;
+	}
+	string str = to_string(correct) + "," + to_string(total) + ";";
+	return str;
+}
+
 int main(int argc, char *argv[]){
+	//vector<int> test_vals  = {16, 32, 128, 256, 512, 1024, 2048};
+	cout << "Always Taken" << endl;
 	cout << always_taken(argv[1]) << endl;
+	cout << "Never Taken" << endl;
 	cout << never_taken(argv[1]) << endl;
+	cout << "Bimodal Single Bit" << endl;
 	cout << bimodal_single_bit(16, argv[1]) << endl;
+	cout << bimodal_single_bit(32, argv[1]) << endl;
+	cout << bimodal_single_bit(128, argv[1]) << endl;
+	cout << bimodal_single_bit(256, argv[1]) << endl;
+	cout << bimodal_single_bit(512, argv[1]) << endl;
+	cout << bimodal_single_bit(1024, argv[1]) << endl;
+	cout << bimodal_single_bit(2048, argv[1]) << endl;
 }
