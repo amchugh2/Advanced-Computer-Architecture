@@ -227,6 +227,23 @@ string gshare(unsigned int GHL, char *file){
 	return str;
 }
 
+string tournament(char* file){
+	// initialize predictors to strongly taken
+	int table_size = 2048;
+	int table[table_size];
+	for(int i = 0; i < table_size; i++){
+		table[i] = 3;
+	}
+
+	//initialize two predictors
+	int size1 = 2048; // bimodal
+	int size2 = 11; // gshare
+	
+
+
+
+}
+
 int main(int argc, char *argv[]){
 	//vector<int> test_vals  = {16, 32, 128, 256, 512, 1024, 2048};
 	/*
