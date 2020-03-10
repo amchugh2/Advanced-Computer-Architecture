@@ -184,6 +184,7 @@ string gshare(unsigned int GHL, char *file){
 	for(int i = 0; i < table_size; i++){
 		table[i] = 3;
 	}
+
 	unsigned long long addr;
 	unsigned long long target;
 	string behavior;
@@ -230,15 +231,146 @@ string gshare(unsigned int GHL, char *file){
 string tournament(char* file){
 	// initialize predictors to strongly taken
 	int table_size = 2048;
-	int table[table_size];
+	int selector[table_size];
 	for(int i = 0; i < table_size; i++){
-		table[i] = 3;
+		selector[i] = 0;
+	}
+	
+	// initialize gshare predictor to strongly taken
+	int gshare[table_size];
+	for(int j = 0; j < table_size; j++){
+		gshare[j] = 3;
 	}
 
-	//initialize two predictors
-	int size1 = 2048; // bimodal
-	int size2 = 11; // gshare
+	// initialize bimodal predictor to strongly taken
+	int bimodal[table_size];
+	for(int k = 0; k < table_size; k++){
+		bimodal[k] = 3;
+	}
 	
+	// read input
+	unsigned long long addr;
+	unsigned long long target;
+	string behavior;
+	string line;
+	int prediction;
+	int last_bits;
+	int correct = 0;
+	int total = 0;
+	unsigned int GHR = 0;
+	int selector_index;
+	int last_bits;
+	int selector_prediction;
+	int bimodal_index;
+	int bimodal_prediction;
+	bool gshare_correct;
+	bool bimodal_correct;
+	int GHL = 11;
+	
+	ifstream infile(file);
+
+	while(getline(infile,line)){
+		stringstream s(line);
+		s >> std::hex >> addr >> behavior >> std::hex >> target;
+		// get index from selector
+		last_bits = (addr & ((1 << ((int)log2(table_size))) - 1));
+		selector_index = last_bits % table_size;
+		// index into selector table to get prediction
+		selector_prediction = selector[selector_index];
+
+		// index into bimodal predictor and get prediction
+		bimodal_index = last_bits % table_size;
+		bimodal_prediction = bimodal[bimodal_index];
+
+		// index into gshare predictor and get prediction
+		gshare_index = ((GHR ^ addr) % table_size);
+		gshare_prediction = gshare[gshare_index];
+
+		// bools for correct & incorrect bimodal and gshare
+		if(behavior == "T"){
+			if((gshare_prediction == 2) || (gshare_prediction == 3)){
+				gshare_correct = true;
+			}
+			else if((bimodal_prediction == 2) || (bimodal_prediction == 3)){
+				bimodal_correct = true;
+			}
+			else{
+				gshare_correct = false;
+				bimodal_correct = false;
+			}
+		}
+		if(behavior == "NT"){
+			if((gshare_prediction == 0) || (gshare_prediction == 1)){
+				gshare_correct = true;
+			}
+			else if((bimodal_prediction == 0) || (bimodal_prediction == 1)){
+				bimodal_correct = true;
+			}
+			else{
+				gshare_correct = false;
+				gshare_correct = false;
+			}
+		}
+
+		// scenarios
+		// only bimodal correct
+		// only gshare correct
+		// both correct
+		// both incorrect
+		if(behavior == "T"){
+			// only bimodal correct
+			if((bimodal_correct == true) && (gshare_correct == false)){
+				// update bimodal
+				bimodal[bimodal_index] = 3;
+				// update gshare
+				gshare[gshare_index]++;
+				// update GHR
+				GHR = (((1 << (GHL)) - 1)) & ((GHR << 1) + 1);
+				// increment selector towards bimodal
+				if(selector[selector_index] != 3){
+					selector[selector_index]++;
+				}
+			}
+			// only gshare correct
+			if((bimodal_correct == false) && (gshare_correct == true)){
+				// update bimodal
+				bimodal[bimodal_index]++;
+				// update gshare
+				gshare[gshare_index] = 3;
+				// update GHR
+				GHR = (((1 << (GHL)) - 1)) & ((GHR << 1) + 1);
+				// increment selector towards gshare
+				if(selector[selector_index] != 0){
+					selector[selector_index]--;
+				}
+			}
+			if((bimodal_correct == true) && (gshare_correct == true)){
+				// update bimodal
+				bimodal[bimodal_index] = 3;
+				// update gshare
+				gshare[gshare_index] = 3;
+				// update GHR
+				GHR = (((1 << (GHL)) - 1)) & ((GHR << 1) + 1);
+				// selector remains the same
+			}
+			if((bimodal_correct == false) && (gshare_correct == false)){
+				// update bimodal
+				bimodal[bimodal_index]++;
+				// update gshare
+				gshare[gshare_index]++;
+				// update GHR
+				GHR = (((1 << (GHL)) - 1)) & ((GHR << 1) + 1);
+				// selector remains the same
+			}
+		}
+
+		
+
+
+
+
+
+
 
 
 
