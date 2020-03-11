@@ -259,7 +259,8 @@ string tournament(char* file){
 	int total = 0;
 	unsigned int GHR = 0;
 	int selector_index;
-	int last_bits;
+	int gshare_index;
+	int gshare_prediction;
 	int selector_prediction;
 	int bimodal_index;
 	int bimodal_prediction;
@@ -356,24 +357,102 @@ string tournament(char* file){
 			if((bimodal_correct == false) && (gshare_correct == false)){
 				// update bimodal
 				bimodal[bimodal_index]++;
-				// update gshare
+				// update gshare`
 				gshare[gshare_index]++;
 				// update GHR
 				GHR = (((1 << (GHL)) - 1)) & ((GHR << 1) + 1);
 				// selector remains the same
 			}
+			if(selector[selector_index] == 2 || selector[selector_index] == 3){
+				if(bimodal[bimodal_index] == true){
+					correct++;
+					selector[selector_index] = 3;
+				}
+				else{
+					selector[selector_index]--;
+			}
+			if(selector[selector_index] == 0 || selector[selector_index] == 1){
+				if(gshare[gshare_index] == true){
+					correct++;
+					selector[selector_index] = 0;
+				}
+				else{
+					selector[selector_index]++;
+				}
+			}
+			}
 		}
-
-		
-
-
-
-
-
-
-
-
-
+		else if(behavior == "NT"){
+			// only bimodal
+			if((bimodal_correct == true) && (gshare_correct == false)){
+				// update bimodal
+				bimodal[bimodal_index] = 0;
+				// update gshare
+				gshare[gshare_index]--;
+				// update GHR
+				GHR = (((1 << (GHL)) - 1)) & ((GHR << 1));	
+				// increment selector towards bimodal
+				if(selector[selector_index] != 3){
+					selector[selector_index]++;
+				}
+			}
+			// only gshare correct
+			if((bimodal_correct == false) && (gshare_correct == true)){
+				// update bimodal
+				bimodal[bimodal_index]--;
+				// update gshare
+				gshare[gshare_index] = 0;
+				// update GHR
+				GHR = (((1 << (GHL)) - 1)) & (GHR << 1);
+				// increment selector towards gshare
+				if(selector[selector_index] != 0){
+					selector[selector_index]--;
+				}
+			}
+			// both true
+			if((bimodal_correct == true) && (gshare_correct == true)){
+				// update bimodal
+				bimodal[bimodal_index] = 3;
+				// update gshare
+				gshare[gshare_index] = 3;
+				// update GHR
+				GHR = (((1 << (GHL)) - 1)) & (GHR << 1);
+				// selector remains the same
+			}
+			// both incorrect
+			if((bimodal_correct == false) && (gshare_correct == false)){
+				// update bimodal
+				bimodal[bimodal_index]--;
+				// update gshare`
+				gshare[gshare_index]--;
+				// update GHR
+				GHR = (((1 << (GHL)) - 1)) & (GHR << 1);
+				// selector remains the same
+			}
+			if(selector[selector_index] == 2 || selector[selector_index] == 3){
+				if(bimodal[bimodal_index] == true){
+					correct++;
+					selector[selector_index] = 3;
+				}
+				else{
+					selector[selector_index]--;
+			}
+			}
+			if(selector[selector_index] == 0 || selector[selector_index] == 1){
+				if(gshare[gshare_index] == true){
+					correct++;
+					selector[selector_index] = 0;
+				}
+				else{
+					selector[selector_index]++;
+				}
+			}
+	
+		}
+		total++;
+	}
+		string str = to_string(correct) + "," + to_string(total);
+		return str;
 }
 
 int main(int argc, char *argv[]){
@@ -402,8 +481,7 @@ int main(int argc, char *argv[]){
 	cout << bimodal_double_bit(512, argv[1]) << endl;
 	cout << bimodal_double_bit(1024, argv[1]) << endl;
 	cout << bimodal_double_bit(2048, argv[1]) << endl;
-	*/
-
+	
 	cout << "GShare" << endl;
 	cout << gshare(3, argv[1]) << endl;
 	cout << gshare(4, argv[1]) << endl;
@@ -414,4 +492,8 @@ int main(int argc, char *argv[]){
 	cout << gshare(9, argv[1]) << endl;
 	cout << gshare(10, argv[1]) << endl;
 	cout << gshare(11, argv[1]) << endl;
+	*/
+
+	cout << "Tournament" << endl;
+	cout << tournament(argv[1]) << endl;
 }
