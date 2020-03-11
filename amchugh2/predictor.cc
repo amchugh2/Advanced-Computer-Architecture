@@ -258,15 +258,11 @@ string tournament(char* file){
 	int correct = 0;
 	int total = 0;
 	unsigned int GHR = 0;
-	int selector_index;
-	int gshare_index;
-	int gshare_prediction;
-	int selector_prediction;
-	int bimodal_index;
-	int bimodal_prediction;
-	bool gshare_correct;
-	bool bimodal_correct;
 	int GHL = 11;
+	bool bimodal_correct;
+	bool gshare_correct;
+	unsigned int pc_index;
+	unsigned int ghsare_index;
 	
 	ifstream infile(file);
 
@@ -274,186 +270,35 @@ string tournament(char* file){
 		stringstream s(line);
 		s >> std::hex >> addr >> behavior >> std::hex >> target;
 		// get index from selector
-		last_bits = (addr & ((1 << ((int)log2(table_size))) - 1));
-		selector_index = last_bits % table_size;
-		// index into selector table to get prediction
-		selector_prediction = selector[selector_index];
-
-		// index into bimodal predictor and get prediction
-		bimodal_index = last_bits % table_size;
-		bimodal_prediction = bimodal[bimodal_index];
-
-		// index into gshare predictor and get prediction
-		gshare_index = ((GHR ^ addr) % table_size);
-		gshare_prediction = gshare[gshare_index];
-
-		// bools for correct & incorrect bimodal and gshare
-		if(behavior == "T"){
-			if((gshare_prediction == 2) || (gshare_prediction == 3)){
-				gshare_correct = true;
-			}
-			else if((bimodal_prediction == 2) || (bimodal_prediction == 3)){
+		bimodal_correct = false;
+		gshare_correct = false;
+		// get last 11 bits
+		pc_index = (addr & ((1 << 11) - 1)) % 2048;
+		// index into gshare
+		gshare_index = (pc_index ^ GHR) % 2048;
+		// if bimodal
+		if(bimodal[pc_index] == 3 || bimodal[pc_index] == 2){
+			if(behavior == "T"){
+				if(bimodal[pc_index] == 0){
+					bimodal[pc_index]+=1;
+				}	
 				bimodal_correct = true;
 			}
 			else{
-				gshare_correct = false;
-				bimodal_correct = false;
+				bimodal[pc_index] -=1;
 			}
 		}
-		if(behavior == "NT"){
-			if((gshare_prediction == 0) || (gshare_prediction == 1)){
-				gshare_correct = true;
-			}
-			else if((bimodal_prediction == 0) || (bimodal_prediction == 1)){
+		else{ // bimodal not true
+			if(behavior == "NT"){
+				if(bimodal[pc_index] == 1){
+					bimodal[pc_index] -= 1;
+				}
 				bimodal_correct = true;
+				ghr
 			}
 			else{
-				gshare_correct = false;
-				gshare_correct = false;
-			}
-		}
 
-		// scenarios
-		// only bimodal correct
-		// only gshare correct
-		// both correct
-		// both incorrect
-		if(behavior == "T"){
-			// only bimodal correct
-			if((bimodal_correct == true) && (gshare_correct == false)){
-				// update bimodal
-				bimodal[bimodal_index] = 3;
-				// update gshare
-				gshare[gshare_index]++;
-				// update GHR
-				GHR = (((1 << (GHL)) - 1)) & ((GHR << 1) + 1);
-				// increment selector towards bimodal
-				if(selector[selector_index] != 3){
-					selector[selector_index]++;
-				}
-			}
-			// only gshare correct
-			if((bimodal_correct == false) && (gshare_correct == true)){
-				// update bimodal
-				bimodal[bimodal_index]++;
-				// update gshare
-				gshare[gshare_index] = 3;
-				// update GHR
-				GHR = (((1 << (GHL)) - 1)) & ((GHR << 1) + 1);
-				// increment selector towards gshare
-				if(selector[selector_index] != 0){
-					selector[selector_index]--;
-				}
-			}
-			if((bimodal_correct == true) && (gshare_correct == true)){
-				// update bimodal
-				bimodal[bimodal_index] = 3;
-				// update gshare
-				gshare[gshare_index] = 3;
-				// update GHR
-				GHR = (((1 << (GHL)) - 1)) & ((GHR << 1) + 1);
-				// selector remains the same
-			}
-			if((bimodal_correct == false) && (gshare_correct == false)){
-				// update bimodal
-				bimodal[bimodal_index]++;
-				// update gshare`
-				gshare[gshare_index]++;
-				// update GHR
-				GHR = (((1 << (GHL)) - 1)) & ((GHR << 1) + 1);
-				// selector remains the same
-			}
-			if(selector[selector_index] == 2 || selector[selector_index] == 3){
-				if(bimodal[bimodal_index] == true){
-					correct++;
-					selector[selector_index] = 3;
-				}
-				else{
-					selector[selector_index]--;
-			}
-			if(selector[selector_index] == 0 || selector[selector_index] == 1){
-				if(gshare[gshare_index] == true){
-					correct++;
-					selector[selector_index] = 0;
-				}
-				else{
-					selector[selector_index]++;
-				}
-			}
-			}
-		}
-		else if(behavior == "NT"){
-			// only bimodal
-			if((bimodal_correct == true) && (gshare_correct == false)){
-				// update bimodal
-				bimodal[bimodal_index] = 0;
-				// update gshare
-				gshare[gshare_index]--;
-				// update GHR
-				GHR = (((1 << (GHL)) - 1)) & ((GHR << 1));	
-				// increment selector towards bimodal
-				if(selector[selector_index] != 3){
-					selector[selector_index]++;
-				}
-			}
-			// only gshare correct
-			if((bimodal_correct == false) && (gshare_correct == true)){
-				// update bimodal
-				bimodal[bimodal_index]--;
-				// update gshare
-				gshare[gshare_index] = 0;
-				// update GHR
-				GHR = (((1 << (GHL)) - 1)) & (GHR << 1);
-				// increment selector towards gshare
-				if(selector[selector_index] != 0){
-					selector[selector_index]--;
-				}
-			}
-			// both true
-			if((bimodal_correct == true) && (gshare_correct == true)){
-				// update bimodal
-				bimodal[bimodal_index] = 3;
-				// update gshare
-				gshare[gshare_index] = 3;
-				// update GHR
-				GHR = (((1 << (GHL)) - 1)) & (GHR << 1);
-				// selector remains the same
-			}
-			// both incorrect
-			if((bimodal_correct == false) && (gshare_correct == false)){
-				// update bimodal
-				bimodal[bimodal_index]--;
-				// update gshare`
-				gshare[gshare_index]--;
-				// update GHR
-				GHR = (((1 << (GHL)) - 1)) & (GHR << 1);
-				// selector remains the same
-			}
-			if(selector[selector_index] == 2 || selector[selector_index] == 3){
-				if(bimodal[bimodal_index] == true){
-					correct++;
-					selector[selector_index] = 3;
-				}
-				else{
-					selector[selector_index]--;
-			}
-			}
-			if(selector[selector_index] == 0 || selector[selector_index] == 1){
-				if(gshare[gshare_index] == true){
-					correct++;
-					selector[selector_index] = 0;
-				}
-				else{
-					selector[selector_index]++;
-				}
-			}
-	
-		}
-		total++;
-	}
-		string str = to_string(correct) + "," + to_string(total);
-		return str;
-}
+				
 
 int main(int argc, char *argv[]){
 	//vector<int> test_vals  = {16, 32, 128, 256, 512, 1024, 2048};
