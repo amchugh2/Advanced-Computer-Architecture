@@ -229,76 +229,119 @@ string gshare(unsigned int GHL, char *file){
 }
 
 string tournament(char* file){
-	// initialize predictors to strongly taken
+	// initialize tables
 	int table_size = 2048;
-	int selector[table_size];
-	for(int i = 0; i < table_size; i++){
-		selector[i] = 0;
-	}
-	
-	// initialize gshare predictor to strongly taken
-	int gshare[table_size];
-	for(int j = 0; j < table_size; j++){
-		gshare[j] = 3;
-	}
-
-	// initialize bimodal predictor to strongly taken
 	int bimodal[table_size];
-	for(int k = 0; k < table_size; k++){
-		bimodal[k] = 3;
-	}
-	
-	// read input
+	int gshare[table_size];
+	int selector[table_size];
+	int correct;
+	int GHR = 0;
+	bool bimodal_correct;
+	bool gshare_correct;
+	int index;
+	int gshare_index;
+	int bimodal_index;
+	int total;
+	string line;
 	unsigned long long addr;
 	unsigned long long target;
 	string behavior;
-	string line;
-	int prediction;
-	int last_bits;
-	int correct = 0;
-	int total = 0;
-	unsigned int GHR = 0;
-	int GHL = 11;
-	bool bimodal_correct;
-	bool gshare_correct;
-	unsigned int pc_index;
-	unsigned int ghsare_index;
-	
-	ifstream infile(file);
 
+	// initialize tables 
+	for(int i = 0; i < table_size; i++){
+		// strongly taken
+		bimodal[i] = 3;
+		gshare[i] = 3;
+		// prefer gshare
+		selector[i] = 0;
+	}
+
+	// loop through all the branch instructions
+	ifstream infile(file);
 	while(getline(infile,line)){
 		stringstream s(line);
 		s >> std::hex >> addr >> behavior >> std::hex >> target;
-		// get index from selector
 		bimodal_correct = false;
 		gshare_correct = false;
-		// get last 11 bits
-		pc_index = (addr & ((1 << 11) - 1)) % 2048;
-		// index into gshare
-		gshare_index = (pc_index ^ GHR) % 2048;
-		// if bimodal
-		if(bimodal[pc_index] == 3 || bimodal[pc_index] == 2){
+		index = (addr & ((1 << 11) - 1)) % 2048;
+		gshare_index = (index ^ GHR) % 2048;
+		// CHECK PREDICTOR THEN CHECK GSHARE
+		// bimodal prediction: taken
+		if(bimodal[index] == 3 || bimodal[index] == 2){
+			// correct prediction
 			if(behavior == "T"){
-				if(bimodal[pc_index] == 0){
-					bimodal[pc_index]+=1;
-				}	
+				bimodal[index] = 3;
 				bimodal_correct = true;
-			}
-			else{
-				bimodal[pc_index] -=1;
+			} // incorrect prediction
+			else if(behavior == "NT"){
+				bimodal[index]--;
 			}
 		}
-		else{ // bimodal not true
-			if(behavior == "NT"){
-				if(bimodal[pc_index] == 1){
-					bimodal[pc_index] -= 1;
+		// bimodal prediction: not taken
+		if(bimodal[index] == 0 || bimodal[index] == 1){
+			// incorrect prediction
+			if(behavior == "T"){
+					bimodal[index]--;
 				}
+		       	// correct prediction
+			else if(behavior == "NT"){
+				bimodal[index] = 0;
 				bimodal_correct = true;
-				ghr
 			}
-			else{
+		}
 
-				
+		// gshare prediction: taken
+		if(gshare[gshare_index] == 2 || gshare[gshare_index] == 3){
+			if(behavior == "T"){ // correct
+				gshare[gshare_index] = 3;
+				gshare_correct = true;
+			}
+			else if(behavior == "NT"){ // incorrect
+				gshare[gshare_correct]--;
+			}
+		}
+		if(gshare[gshare_index] == 0 || gshare[gshare_index] == 1){
+			if(behavior == "T"){ // incorrect
+				gshare[gshare_index]--;
+			}
+			else if(behavior == "NT"){ // correct
+				gshare[gshare_index] = 0;
+				gshare_correct = true;
+			}
+		}
+		// selector
+		if(gshare_correct == true && bimodal_correct == true){
+			correct++;
+			continue;
+		}
+		else if(gshare_correct == false && bimodal_correct == false){
+			continue;
+		}
+
+		// if selector is 0 or 1 prefer gshare
+		if(selector[index] == 0 || selector[index] == 1){
+			if(gshare_correct == true){ // correct prediction
+				selector[index] = 0;
+				correct++;
+			}
+			else if(gshare_correct == false){ // incorrect prediction
+				selector[index]++;
+			}
+		}
+		else if(selector[index] == 2 || selector[index] == 3){
+			if(bimodal_correct == true){ // correct prediction
+				selector[index] = 3;
+				correct++;
+			}
+			else if(bimodal_correct == false){
+				selector[index]--;
+			}
+		}
+		total++;
+	}
+	string str = to_string(correct) + "," + to_string(total) + ";";
+	return str;
+}		
 
 int main(int argc, char *argv[]){
 	//vector<int> test_vals  = {16, 32, 128, 256, 512, 1024, 2048};
