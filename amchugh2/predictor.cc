@@ -256,6 +256,7 @@ string tournament(char* file){
 		selector[i] = 0;
 	}
 
+
 	// loop through all the branch instructions
 	ifstream infile(file);
 	while(getline(infile,line)){
@@ -273,20 +274,20 @@ string tournament(char* file){
 				bimodal[index] = 3;
 				bimodal_correct = true;
 			} // incorrect prediction
-			else if(behavior == "NT"){
-				bimodal[index]--;
+			else{
+				bimodal[index]-=1;
 			}
 		}
 		// bimodal prediction: not taken
-		if(bimodal[index] == 0 || bimodal[index] == 1){
+		else{
 			// incorrect prediction
-			if(behavior == "T"){
-					bimodal[index]--;
+			if(behavior == "NT"){
+					bimodal[index] = 0;
+					bimodal_correct = true;
 				}
 		       	// correct prediction
-			else if(behavior == "NT"){
-				bimodal[index] = 0;
-				bimodal_correct = true;
+			else if(behavior == "T"){
+				bimodal[index]+=1;
 			}
 		}
 
@@ -295,26 +296,32 @@ string tournament(char* file){
 			if(behavior == "T"){ // correct
 				gshare[gshare_index] = 3;
 				gshare_correct = true;
+				GHR = ((GHR << 1) | 1) & ((1 << (11)) - 1);
 			}
 			else if(behavior == "NT"){ // incorrect
-				gshare[gshare_correct]--;
+				gshare[gshare_correct]-=1;
+				GHR = (GHR << 1) & ((1 << (11)) - 1);
+
 			}
-		}
-		if(gshare[gshare_index] == 0 || gshare[gshare_index] == 1){
+		} // prediction is not taken
+		else{
 			if(behavior == "T"){ // incorrect
-				gshare[gshare_index]--;
+				gshare[gshare_index]+=1;
+				GHR = ((GHR << 1) | 1) & ((1 << (11)) - 1);
+
 			}
 			else if(behavior == "NT"){ // correct
 				gshare[gshare_index] = 0;
 				gshare_correct = true;
+				GHR = (GHR << 1) & ((1 << (11)) - 1);
 			}
 		}
 		// selector
-		if(gshare_correct == true && bimodal_correct == true){
+		if((gshare_correct == true) && (bimodal_correct == true)){
 			correct++;
 			continue;
 		}
-		else if(gshare_correct == false && bimodal_correct == false){
+		else if((gshare_correct == false) &&( bimodal_correct == false)){
 			continue;
 		}
 
@@ -325,16 +332,16 @@ string tournament(char* file){
 				correct++;
 			}
 			else if(gshare_correct == false){ // incorrect prediction
-				selector[index]++;
+				selector[index]+=1;
 			}
 		}
-		else if(selector[index] == 2 || selector[index] == 3){
+		else{
 			if(bimodal_correct == true){ // correct prediction
 				selector[index] = 3;
 				correct++;
 			}
 			else if(bimodal_correct == false){
-				selector[index]--;
+				selector[index]-=1;
 			}
 		}
 		total++;
