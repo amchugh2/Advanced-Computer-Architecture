@@ -36,7 +36,7 @@ string always_taken(char* file){
 		}
 	total = total + 1;
 	}
-	string str = to_string(correct) + "," + to_string(total) + ";\n";
+	string str = to_string(correct) + "," + to_string(total) + "; ";
 	return str;
 }
 
@@ -60,7 +60,7 @@ string never_taken(char *file){
 		}
 	total++;
 	}
-	string str = to_string(correct) + "," + to_string(total) + ";\n";
+	string str = to_string(correct) + "," + to_string(total) + "; ";
 	return str;
 }
 
@@ -360,7 +360,7 @@ int tournament(char* file){
 	return correct;
 }
 
-// 7. Branch Target Buffer
+/* 7. Branch Target Buffer
 // BTB integrated with Bimodal Predictor. Size = 512 entries
 // Initialized with single bit of history to "T"
 // BTB indexed using the PC of the branch isn
@@ -439,7 +439,7 @@ string BTB(char *file){
 	string str = to_string(correct) + "," + to_string(total); + "; ";
 	return str;
 }
-
+*/
 int main(int argc, char *argv[]){
 	// get total number of lines for tournament predictor
 	string line;
@@ -451,47 +451,47 @@ int main(int argc, char *argv[]){
 		++total;
 	}
 	
-	//vector<int> test_vals  = {16, 32, 128, 256, 512, 1024, 2048};
-	/*
-	cout << "Always Taken" << endl;
-	cout << always_taken(argv[1]) << endl;
-:
-	cout << "Never Taken" << endl;
-	cout << never_taken(argv[1]) << endl;
-
-	cout << "Bimodal Single Bit" << endl;
-	cout << bimodal_single_bit(16, argv[1]) << endl;
-	cout << bimodal_single_bit(32, argv[1]) << endl;
-	cout << bimodal_single_bit(128, argv[1]) << endl;
-	cout << bimodal_single_bit(256, argv[1]) << endl;
-	cout << bimodal_single_bit(512, argv[1]) << endl;
-	cout << bimodal_single_bit(1024, argv[1]) << endl;
-	cout << bimodal_single_bit(2048, argv[1]) << endl;
+	ofstream file;
+	file.open("output.txt");
+	// Always Taken
+	file << always_taken(argv[1]) << endl;
+	// Never Taken
+	file << never_taken(argv[1]) << endl;
+	// Bimodal Single Bit
+	file << bimodal_single_bit(16, argv[1]);
+	file << bimodal_single_bit(32, argv[1]);
+	file << bimodal_single_bit(128, argv[1]);
+	file << bimodal_single_bit(256, argv[1]);
+	file << bimodal_single_bit(512, argv[1]);
+	file << bimodal_single_bit(1024, argv[1]);
+	file << bimodal_single_bit(2048, argv[1]) << endl;
 		
-	cout << "Bimodal Double Bit" << endl;
-	cout << bimodal_double_bit(16, argv[1]) << endl;
-	cout << bimodal_double_bit(32, argv[1]) << endl;
-	cout << bimodal_double_bit(128, argv[1]) << endl;
-	cout << bimodal_double_bit(256, argv[1]) << endl;
-	cout << bimodal_double_bit(512, argv[1]) << endl;
-	cout << bimodal_double_bit(1024, argv[1]) << endl;
-	cout << bimodal_double_bit(2048, argv[1]) << endl;
+	// Bimodal Double Bit
+	file << bimodal_double_bit(16, argv[1]);
+	file << bimodal_double_bit(32, argv[1]);
+	file << bimodal_double_bit(128, argv[1]);
+	file << bimodal_double_bit(256, argv[1]);
+	file << bimodal_double_bit(512, argv[1]);
+	file << bimodal_double_bit(1024, argv[1]);
+	file << bimodal_double_bit(2048, argv[1]) << endl;
 	
-	cout << "GShare" << endl;
-	cout << gshare(3, argv[1]) << endl;
-	cout << gshare(4, argv[1]) << endl;
-	cout << gshare(5, argv[1]) << endl;
-	cout << gshare(6, argv[1]) << endl;
-	cout << gshare(7, argv[1]) << endl;
-	cout << gshare(8, argv[1]) << endl;
-	cout << gshare(9, argv[1]) << endl;
-	cout << gshare(10, argv[1]) << endl;
-	cout << gshare(11, argv[1]) << endl;
+	// GShare
+	file << gshare(3, argv[1]);
+	file << gshare(4, argv[1]);
+	file << gshare(5, argv[1]);
+	file << gshare(6, argv[1]);
+	file << gshare(7, argv[1]);
+	file << gshare(8, argv[1]);
+	file << gshare(9, argv[1]);
+	file << gshare(10, argv[1]);
+	file << gshare(11, argv[1]) << endl;
 
-	cout << "Tournament" << endl;
-	cout << tournament(argv[1]) << "," << total << ";" << endl;
+	// Tournament
+	file << tournament(argv[1]) << "," << total << ";" << endl;
+
+	/* BTB
+	file << BTB(argv[1]) << endl;
 	*/
-
-	cout << "BTB" << endl;
-	cout << BTB(argv[1]) << endl;
+	file.close();
+	return 0;
 }
