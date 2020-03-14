@@ -328,42 +328,30 @@ int tournament(char* file){
 		// 3. IF PREFER PREDICTOR
 		// 	A. PREDICTION TRUE: SET TO 0 (GSHARE) OR 3 (BIMODAL)
 		// 	B. PREDICTION FALSE: INCREMENT (GSHARE WRONG) / DECREMENT (BIMODAL WRONG)
-		//take care of selector table
-		if ((gshare_correct && bimodal_correct)) {
-			num_correct++;
+	
+		if ((gshare_correct == true) && (bimodal_correct == true)) {
+			correct++;
 			continue;
 		}
-		else if (!gshare_correct && !bimodal_correct) {
+		else if ((gshare_correct == false) && (bimodal_correct == false)) {
 			continue;
 		}
-		//if selector is 2 or 3, we prefer bimodal
-		if (selector_table[pc_index] == STRONGLY_TAKEN || selector_table[pc_index] == WEAKLY_TAKEN) {
-			//the prediction to prefer bimodal was correct
-			if (bimodal_correct) {
-				//if selector weakly preferred bimodal, set to strongly prefer bimodal
-				if (selector_table[pc_index] == WEAKLY_TAKEN) {
-					(selector_table[pc_index])+=1;
-				}
-				num_correct++;
+		if (selector[pc_index] == 3 || selector[pc_index] == 2) {
+			if (bimodal_correct == true) {
+				selector[pc_index] +=1;
+				correct++;
 			}
-			//if the prediction to prefer bimodal was incorrect, set strongly prefer bimodal to weakly prefer bimodal or weakly prefer bimodal to weakly prefer gshare
 			else {
-				(selector_table[pc_index])-=1;
+				selector[pc_index]-=1;
 			}
 		}
-		//if selector is 0 or 1, we prefer gshare
 		else {
-			//the prediction to prefer gshare  was correct
-			if (gshare_correct) {
-				//if selector weakly preferred gshare, set to strongly prefer gshare
-				if (selector_table[pc_index] == WEAKLY_NOT_TAKEN) {
-					(selector_table[pc_index])-=1;
-				}
-				num_correct++;
+			if (gshare_correct == true) {
+				selector[pc_index] = 0;
+				correct++;
 			}
-			//if the prediction to prefer gshare was incorrect, set strongly prefer gshare to weakly prefer gshare or weakly prefer gshare to weakly prefer bimodal
 			else {
-				(selector_table[pc_index])+=1;
+				selector[pc_index]+=1;
 			}
 
 		}
