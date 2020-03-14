@@ -360,6 +360,86 @@ int tournament(char* file){
 	return correct;
 }
 
+// 7. Branch Target Buffer
+// BTB integrated with Bimodal Predictor. Size = 512 entries
+// Initialized with single bit of history to "T"
+// BTB indexed using the PC of the branch isn
+// if prediction = taken -> target is read
+// if actual behavior = taken -> BTB is updated with the correct branch target
+// use PC to index into BTB
+// if PC prediction != actual branch, misprediction -> write correct into table
+string BTB(char *file){
+	// init reading from file
+	string behavior;
+	string line;
+	ifstream infile(file);
+
+	// init variables
+	unsigned long long addr;
+	unsigned long long target;
+	int table_size = 512;
+	int last_bits;
+	int prediction;
+	int correct = 0;
+	int total = 0;
+
+	// init tables
+	int bimodal[table_size];
+	unsigned long long BTB[table_size];
+	for(int i = 0; i < table_size; i++){
+		bimodal[i] = 1; // taken
+		BTB[i] = 0; 
+	}
+	// read input
+	while(getline(infile,line)){
+		stringstream s(line);
+		s >> std::hex >> addr >> behavior >> std::hex >> target;
+		last_bits = (addr & ((1 << ((int)log2(table_size))) - 1));
+		if(bimodal[last_bits % table_size] == 1){ // taken
+			cout<< "here1" << endl;
+			if(behavior == "T"){ // taken
+				cout << "here5" << endl;
+				// if target address = actual address
+				bimodal[last_bits % table_size] = 1;
+				cout << "here6" << endl;
+				// below line is giving me error
+				if(target == BTB[last_bits % table_size]){ 
+					cout << "here7" << endl;
+					correct++;
+				}
+				else if(target != BTB[addr]){
+					BTB[last_bits % table_size] = target;
+				}
+			}
+			
+			else if(behavior == "NT"){ // not taken, wrong
+				bimodal[last_bits % table_size] = 0;
+			}
+		}
+		if(bimodal[last_bits % table_size] == 0){
+			cout << "here4" << endl;
+			if(behavior == "T"){ // wrong
+				//cout << "here4" << endl;
+				bimodal[last_bits % table_size] = 1;
+				if(target == BTB[last_bits % table_size]){
+					correct++;
+				}
+				else if(target != BTB[last_bits % table_size]){
+					BTB[last_bits % table_size] = target;
+				}
+			}
+			else if(behavior == "NT") { // right
+				// update bimodal
+				bimodal[last_bits % table_size] = 0;
+				// basically does nothing but hey why not
+			}
+		}
+			total++;
+		}
+	string str = to_string(correct) + "," + to_string(total); + "; ";
+	return str;
+}
+
 int main(int argc, char *argv[]){
 	// get total number of lines for tournament predictor
 	string line;
@@ -407,8 +487,11 @@ int main(int argc, char *argv[]){
 	cout << gshare(9, argv[1]) << endl;
 	cout << gshare(10, argv[1]) << endl;
 	cout << gshare(11, argv[1]) << endl;
-	*/
 
 	cout << "Tournament" << endl;
-	cout << tournament(argv[1]) << "," << total << ";" << endl;;
+	cout << tournament(argv[1]) << "," << total << ";" << endl;
+	*/
+
+	cout << "BTB" << endl;
+	cout << BTB(argv[1]) << endl;
 }
