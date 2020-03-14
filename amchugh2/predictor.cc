@@ -328,34 +328,44 @@ int tournament(char* file){
 		// 3. IF PREFER PREDICTOR
 		// 	A. PREDICTION TRUE: SET TO 0 (GSHARE) OR 3 (BIMODAL)
 		// 	B. PREDICTION FALSE: INCREMENT (GSHARE WRONG) / DECREMENT (BIMODAL WRONG)
-
-		if ((gshare_correct == true) && (bimodal_correct == true)) { // if both true, increment correct and do nothing
-			correct++;
+		//take care of selector table
+		if ((gshare_correct && bimodal_correct)) {
+			num_correct++;
 			continue;
 		}
-		else if((gshare_correct == false) && (bimodal_correct == false)){ // if both false, do nothing
+		else if (!gshare_correct && !bimodal_correct) {
 			continue;
 		}
-
-		// IF SELECTOR TABLE = 0 OR 1: PREFER GSHARE
-		if(selector[pc_index] == 0 || selector[pc_index] == 1){
-			if(gshare_correct = true){ // correct prediction
-				selector[pc_index] = 0;
-				correct++;
+		//if selector is 2 or 3, we prefer bimodal
+		if (selector_table[pc_index] == STRONGLY_TAKEN || selector_table[pc_index] == WEAKLY_TAKEN) {
+			//the prediction to prefer bimodal was correct
+			if (bimodal_correct) {
+				//if selector weakly preferred bimodal, set to strongly prefer bimodal
+				if (selector_table[pc_index] == WEAKLY_TAKEN) {
+					(selector_table[pc_index])+=1;
+				}
+				num_correct++;
 			}
-			else { // incorrect prediction
-				selector[pc_index] += 1;
+			//if the prediction to prefer bimodal was incorrect, set strongly prefer bimodal to weakly prefer bimodal or weakly prefer bimodal to weakly prefer gshare
+			else {
+				(selector_table[pc_index])-=1;
 			}
 		}
-		// IF SELECTOR TABLE = 2 OR 3: PREFER BIMODAL
-		if (selector[pc_index] == 3 || selector[pc_index] == 2) {
-			if (bimodal_correct == true) { // correct prediction
-				selector[pc_index] = 3;
-				correct++;
+		//if selector is 0 or 1, we prefer gshare
+		else {
+			//the prediction to prefer gshare  was correct
+			if (gshare_correct) {
+				//if selector weakly preferred gshare, set to strongly prefer gshare
+				if (selector_table[pc_index] == WEAKLY_NOT_TAKEN) {
+					(selector_table[pc_index])-=1;
+				}
+				num_correct++;
 			}
-		else { // incorrect prediction
-				selector[pc_index] -=1;
+			//if the prediction to prefer gshare was incorrect, set strongly prefer gshare to weakly prefer gshare or weakly prefer gshare to weakly prefer bimodal
+			else {
+				(selector_table[pc_index])+=1;
 			}
+
 		}
 	}
 	return correct;
