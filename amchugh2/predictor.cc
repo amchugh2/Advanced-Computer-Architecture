@@ -229,153 +229,154 @@ string gshare(unsigned int GHL, char *file){
 }
 
 int tournament(char* file){
-	//initialize bimodal predictor table, gshare predictor table, and selector table
+	//initialize tables
 	int table_size = 2048;
 	int bimodal[table_size];
 	int gshare[table_size];
 	int selector[table_size];
-	long num_correct = 0;
-	unsigned int ghr = 0;
+	for(int i = 0; i < table_size; i++){
+		selector[i] = 0; // strongly not taken
+		bimodal[i] = 3; // strongly not taken
+		gshare[i] = 3; // strongly not taken
+	}
+	
+	// initialize variables
+	int correct = 0;
+	// for gshare
+	int GHR = 0;
+	int GHL = 11;
 	string behavior;
 	string line;
 	unsigned long long addr;
 	unsigned long long target;
-	int total;
+	bool bimodal_correct = false;
+	bool gshare_correct = false;
+	int gshare_index;
+	int pc_index;
 
-	//set all initial values in selector table to prefer gshare
-	for (int i = 0; i < table_size; i++) {
-		selector[i] = 0;
-		bimodal[i] = 3;
-		gshare[i] = 3;
-	}
-
-	//loop through all the branch instructions	
+	// get input
 	ifstream infile(file);
-	
-
 	while(getline(infile,line)){
 		stringstream s(line);
 		s >> std::hex >> addr >> behavior >> std::hex >> target;
+		// to be used later
 		bool bimodal_correct = false;
 		bool gshare_correct = false;
 		//get last 11 bits of address
-		unsigned int pc_index = (addr & ((1 << 11) - 1)) % 2048;
+		unsigned int pc_index = (addr & ((1 << GHL) - 1)) % table_size;
 		//get index to use for gshare table 
-		unsigned int g_index = (pc_index ^ ghr) % 2048;
-		//take care of bimodal predictor table
-		//if bimodal prediction is taken
+		unsigned int gshare_index = (pc_index ^ GHR) % table_size;
+	
+		// LOGIC:
+		// 1. CHECK EACH TABLE
+		// 	A. CHECK BEHAVIOR
+		// 		I. CORRECT PREDICTION: SET TO 0 (STRONGLY NOT TAKEN) / 3 (STRONGLY TAKEN)
+		// 		II. INCORRECT PREDICTION: INCREMENT (NOT TAKEN) / DECREMENT (TAKEN)
+		// 2. TAKE CARE OF EACH SELECTOR TABLE
+		
+		// BIMODAL TABLE
 		if (bimodal[pc_index] == 3 || bimodal[pc_index] == 2) {
-			//the bimodal prediction was correct
-			if (behavior == "T") {
-				//if bimodal prediction was weakly taken, set to strongly taken
+			if (behavior == "T") { // correct
 				bimodal[pc_index] = 3;
 				bimodal_correct = true;
 			}
-			//if our bimodal prediction was incorrect, set ST to WT or WT to WNT
-			else {
-				(bimodal[pc_index])-=1;
+			else if(behavior == "NT"){
+				bimodal[pc_index]-=1;
 			}
 		}
-		//if bimodal prediction is not taken
-		else {
-			//our prediction was correct
-			if (behavior == "NT") {
-				//if prediction was weakly not taken, set to strongly not taken
+		else if(bimodal[pc_index] == 0 || bimodal[pc_index] == 1){
+			if (behavior == "T") { // incorrect
+				bimodal[pc_index] +=1;
+			}
+			else if(behavior == "NT"){ // correct
 				bimodal[pc_index] = 0;
 				bimodal_correct = true;
 			}
-			//if our prediction was incorrect, set SNT to WNT or WNT to WT
-			else {
-				(bimodal[pc_index])+=1;
-
-			}
 
 		}
 
-		//take care of gshare table
-		if (gshare[g_index] == 3 || gshare[g_index] == 2) {
-			//our prediction was correct
-			if (behavior == "T") {
-				//if prediction was weakly taken, set to strongly taken
-				(gshare[g_index]) = 3;
+		// GSHARE TABLE
+		if (gshare[gshare_index] == 3 || gshare[gshare_index] == 2) {
+			if (behavior == "T") { // correct
+				(gshare[gshare_index]) = 3;
 				gshare_correct = true;
-				ghr = ((ghr << 1) | 1) & ((1 << (11)) - 1);
+				GHR = ((GHR << 1) | 1) & ((1 << (GHL)) - 1);
 
 			}
-			//if our prediction was incorrect, set ST to WT or WT to WNT
-			else {
-				(gshare[g_index])-=1;
-				ghr = (ghr << 1) & ((1 << (11)) - 1);
+			else if(behavior == "NT") { // incorrect
+				(gshare[gshare_index])-=1;
+				GHR = (GHR << 1) & ((1 << (GHL)) - 1);
 
 			}
 		}
-		//if prediction is not taken
-		else {
-			//our prediction was correct
-			if (behavior == "NT") {
-				//if prediction was weakly not taken, set to strongly not taken
-				(gshare[g_index]) = 0;
+		else if(gshare[gshare_index] == 0 || gshare[gshare_index] == 1) {
+			if(behavior == "T"){ // incorrect
+				gshare[gshare_index] +=1;
+				GHR = ((GHR << 1) | 1) & ((1 << (GHL)) - 1);
+			}
+			else if (behavior == "NT") { // correct
+				(gshare[gshare_index]) = 0;
 				gshare_correct = true;
-				ghr = (ghr << 1) & ((1 << (11)) - 1);
+				GHR = (GHR << 1) & ((1 << (GHL)) - 1);
 
 			}
-			//if our prediction was incorrect, set SNT to WNT or WNT to WT
-			else {
-				(gshare[g_index])+=1;
-				ghr = ((ghr << 1) | 1) & ((1 << (11)) - 1);
-			}
-			
 		}
 
-		//take care of selector table
-		if ((gshare_correct && bimodal_correct)) {
-			num_correct++;
+		// SELECTOR TABLE LOGIC
+		// 1. IF BOTH CORRECT: INCREMENT NUM CORRECT & DO NOTHING (CONTINUE)
+		// 2. IF NEITHER CORRECT: DO NOTHING
+		// 3. IF PREFER PREDICTOR
+		// 	A. PREDICTION TRUE: SET TO 0 (GSHARE) OR 3 (BIMODAL)
+		// 	B. PREDICTION FALSE: INCREMENT (GSHARE WRONG) / DECREMENT (BIMODAL WRONG)
+
+		if ((gshare_correct == true) && (bimodal_correct == true)) { // if both true, increment correct and do nothing
+			correct++;
 			continue;
 		}
-		else if (!gshare_correct && !bimodal_correct) {
+		else if((gshare_correct == false) && (bimodal_correct == false)){ // if both false, do nothing
 			continue;
 		}
-		//if selector is 2 or 3, we prefer bimodal
+
+		// IF SELECTOR TABLE = 0 OR 1: PREFER GSHARE
+		if(selector[pc_index] == 0 || selector[pc_index] == 1){
+			if(gshare_correct = true){ // correct prediction
+				selector[pc_index] = 0;
+				correct++;
+			}
+			else { // incorrect prediction
+				selector[pc_index] += 1;
+			}
+		}
+		// IF SELECTOR TABLE = 2 OR 3: PREFER BIMODAL
 		if (selector[pc_index] == 3 || selector[pc_index] == 2) {
-			//the prediction to prefer bimodal was correct
-			if (bimodal_correct) {
-				//if selector weakly preferred bimodal, set to strongly prefer bimodal
-				if (selector[pc_index] == 2) {
-					(selector[pc_index])+=1;
-				}
-				num_correct++;
+			if (bimodal_correct == true) { // correct prediction
+				selector[pc_index] = 3;
+				correct++;
 			}
-			//if the prediction to prefer bimodal was incorrect, set strongly prefer bimodal to weakly prefer bimodal or weakly prefer bimodal to weakly prefer gshare
-			else {
-				(selector[pc_index])-=1;
+		else { // incorrect prediction
+				selector[pc_index] -=1;
 			}
 		}
-		//if selector is 0 or 1, we prefer gshare
-		else {
-			//the prediction to prefer gshare  was correct
-			if (gshare_correct) {
-				//if selector weakly preferred gshare, set to strongly prefer gshare
-				(selector[pc_index]) = 0;
-				num_correct++;
-			}
-			//if the prediction to prefer gshare was incorrect, set strongly prefer gshare to weakly prefer gshare or weakly prefer gshare to weakly prefer bimodal
-			else {
-				(selector[pc_index])+=1;
-			}
-			
-			}
-		total++;
-
 	}
-	return total;
+	return correct;
 }
 
 int main(int argc, char *argv[]){
+	// get total number of lines for tournament predictor
+	string line;
+	int total = 0;
+	ifstream infile(argv[1]);
+	
+	while(getline(infile,line)){
+		stringstream s(line);
+		++total;
+	}
+	
 	//vector<int> test_vals  = {16, 32, 128, 256, 512, 1024, 2048};
 	/*
 	cout << "Always Taken" << endl;
 	cout << always_taken(argv[1]) << endl;
-
+:
 	cout << "Never Taken" << endl;
 	cout << never_taken(argv[1]) << endl;
 
@@ -410,5 +411,5 @@ int main(int argc, char *argv[]){
 	*/
 
 	cout << "Tournament" << endl;
-	cout << tournament(argv[1]) << endl;
+	cout << tournament(argv[1]) << "," << total << ";" << endl;;
 }
