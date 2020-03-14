@@ -228,7 +228,7 @@ string gshare(unsigned int GHL, char *file){
 	return str;
 }
 
-string tournament(char* file){
+int tournament(char* file){
 	//initialize bimodal predictor table, gshare predictor table, and selector table
 	int table_size = 2048;
 	int bimodal[table_size];
@@ -362,13 +362,12 @@ string tournament(char* file){
 			else {
 				(selector[pc_index])+=1;
 			}
-
+			
 			}
-	}
+		total++;
 
 	}
-	string str = to_string(num_correct) + "," + to_string(total);
-	return str;
+	return total;
 }
 
 int main(int argc, char *argv[]){
