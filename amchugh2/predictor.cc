@@ -64,7 +64,6 @@ string never_taken(char *file){
 	return str;
 }
 
-
 // Predictor #3: Bimodal Predictor with Single Bit of History
 // Must hard-code in table size -> will be passed on as parameter
 // Assume initial state of all prediction counters is Taken ("T")
@@ -92,9 +91,7 @@ string bimodal_single_bit(int table_size, char *file){
 	// get index
 	while(getline(infile,line)){
 		stringstream s(line);
-		s >> std::hex >> addr >> behavior >> std::hex >> target;
-		
-		// FIXME: saying behavior is always NT
+		s >> std::hex >> addr >> behavior >> std::hex >> target;		
 		last_bits = (addr & ((1 << ((int)log2(table_size))) - 1));
 		if(behavior == "T"){
 			if(table[last_bits % table_size] == "T"){
@@ -360,7 +357,7 @@ int tournament(char* file){
 	return correct;
 }
 
-/* 7. Branch Target Buffer
+// 7. Branch Target Buffer
 // BTB integrated with Bimodal Predictor. Size = 512 entries
 // Initialized with single bit of history to "T"
 // BTB indexed using the PC of the branch isn
@@ -388,23 +385,57 @@ string BTB(char *file){
 	unsigned long long BTB[table_size];
 	for(int i = 0; i < table_size; i++){
 		bimodal[i] = 1; // taken
-		BTB[i] = 0; 
+		BTB[i] = 0; // not really sure what to initialize here 
 	}
+
 	// read input
 	while(getline(infile,line)){
 		stringstream s(line);
 		s >> std::hex >> addr >> behavior >> std::hex >> target;
 		last_bits = (addr & ((1 << ((int)log2(table_size))) - 1));
 		if(bimodal[last_bits % table_size] == 1){ // taken
-			cout<< "here1" << endl;
+			// don't need to update bimodal
+			if(behavior == "T"){ // get BTB
+				total++;
+				cout << "before first comp" << endl;
+				//issue: nothing with BTB[addr]
+				if(target == BTB[addr ^ table_size]){
+				cout << "after first comp" << endl;
+					correct++;
+				}
+				//cout << "before first != comp" << endl;
+				else if(target != BTB[addr]){
+					BTB[addr] = target;
+				}
+			}
+			else if(behavior == "NT"){
+				bimodal[last_bits % table_size] = 0;
+			}
+		}
+		else{ // prediction is not taken
+			if(behavior == "T"){ // even though the prediction is wrong but we need to update BTB
+				total++;
+				bimodal[last_bits % table_size] = 0;
+				if(target == BTB[addr]){
+					correct++;
+				}
+				else if(target != BTB[addr]){
+					BTB[addr] = target;
+				}
+			}
+			// if prediction is NT and behavior is NT neither BTB nor biomdal need to be updated
+		}
+		/*
+		if(bimodal[last_bits % table_size] == 1){ // taken
 			if(behavior == "T"){ // taken
-				cout << "here5" << endl;
+				total++; // add to total
 				// if target address = actual address
 				bimodal[last_bits % table_size] = 1;
-				cout << "here6" << endl;
+
 				// below line is giving me error
-				if(target == BTB[last_bits % table_size]){ 
-					cout << "here7" << endl;
+				cout << "target = BTB not working" << endl;
+				if(target == BTB[last_bits % table_size]){
+				cout << "solved BTB to target comparison" << endl;	
 					correct++;
 				}
 				else if(target != BTB[addr]){
@@ -413,15 +444,16 @@ string BTB(char *file){
 			}
 			
 			else if(behavior == "NT"){ // not taken, wrong
+				// don't do anything to BTB just update bimodal
 				bimodal[last_bits % table_size] = 0;
 			}
 		}
+		// prediction is not taken
 		if(bimodal[last_bits % table_size] == 0){
-			cout << "here4" << endl;
-			if(behavior == "T"){ // wrong
-				//cout << "here4" << endl;
+			if(behavior == "T"){ // wrong, but need to update BTB
+				total++; // add to total
 				bimodal[last_bits % table_size] = 1;
-				if(target == BTB[last_bits % table_size]){
+				if(target == BTB[last_bits % table_size]){ // correct address prediction
 					correct++;
 				}
 				else if(target != BTB[last_bits % table_size]){
@@ -434,12 +466,13 @@ string BTB(char *file){
 				// basically does nothing but hey why not
 			}
 		}
+		*/
 			total++;
-		}
+	}
 	string str = to_string(correct) + "," + to_string(total); + "; ";
 	return str;
 }
-*/
+
 int main(int argc, char *argv[]){
 	// get total number of lines for tournament predictor
 	string line;
@@ -450,7 +483,8 @@ int main(int argc, char *argv[]){
 		stringstream s(line);
 		++total;
 	}
-	
+
+	/*	
 	ofstream file;
 	file.open("output.txt");
 	// Always Taken
@@ -489,9 +523,10 @@ int main(int argc, char *argv[]){
 	// Tournament
 	file << tournament(argv[1]) << "," << total << ";" << endl;
 
-	/* BTB
-	file << BTB(argv[1]) << endl;
 	*/
-	file.close();
+
+       	cout << "BTB" << endl;
+	cout << BTB(argv[1]) << endl;
+	//file.close();
 	return 0;
 }
