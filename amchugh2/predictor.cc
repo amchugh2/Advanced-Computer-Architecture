@@ -379,8 +379,8 @@ string BTB(char *file){
 	int prediction;
 	int correct = 0;
 	int total = 0;
-	unsigned long long BTB_prediction;
-	unsigned long long PC_prediction;
+	//unsigned long long BTB_prediction;
+	//unsigned long long PC_prediction;
 
 	// init tables
 	int bimodal[table_size];
@@ -400,16 +400,16 @@ string BTB(char *file){
 			total = total + 1; // increment BTB access
 			// check if target is in BTB
 			if(target == BTB[last_bits % table_size]){
-				correct++;
+				correct = correct + 1;
 			}
-			if(behavior == "T"){ // put target address from trace in BTB
-				BTB[last_bits % table_size] = target;
+			//if(behavior == "T"){ // put target address from trace in BTB
+			//	BTB[last_bits % table_size] = target;
 			} // update bimodal table if prediction is wrong
 			else{
 				bimodal[last_bits % table_size] = 0;
 			}
 		}
-		else if(bimodal[last_bits % table_size] == 0){ // predict not taken
+		else if(bimodal[addr % table_size] == 0){ // predict not taken
 			if(behavior == "T"){
 				// read BTB
 				BTB[last_bits % table_size] = target;
