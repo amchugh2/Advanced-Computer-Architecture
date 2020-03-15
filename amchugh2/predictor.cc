@@ -396,49 +396,29 @@ string BTB(char *file){
 		s >> std::hex >> addr >> behavior >> std::hex >> target;
 		// indexing is correct
 		last_bits = (addr & ((1 << ((int)log2(table_size))) - 1));
-		if(bimodal[last_bits % table_size] == 1){ // taken
-			// don't need to update bimodal
-			if(behavior == "T"){ // get BTB
-				total++;
+		if(bimodal[last_bits % table_size] == 1){ // predict taken
+			total = total + 1; // increment BTB access
+			// check if target is in BTB
+			if(target == BTB[last_bits % table_size]){
+				correct++;
+			}
+			if(behavior == "T"){ // put target address from trace in BTB
+				BTB[last_bits % table_size] = target;
+			} // update bimodal table if prediction is wrong
+			else{
+				bimodal[last_bits % table_size] = 0;
+			}
+		}
+		else if(bimodal[last_bits % table_size] == 0){ // predict not taken
+			if(behavior == "T"){
 				// read BTB
-				BTB_prediction = BTB[last_bits % table_size];
-				if(target == BTB_prediction){
-					correct++;
-				}
-				//cout << "before first != comp" << endl;
-				else if(target != BTB[last_bits % table_size]){
-					BTB[last_bits % table_size] = target;
-				}
-			}
-			else if(behavior == "NT"){
-				bimodal[last_bits % table_size] = 0;
-				// get prediction by PC + 4
-				PC_prediction = (addr + 0x4);
-				if(target == PC_prediction){
-					correct++;
-				}
-				else if(target != PC_prediction){
-					BTB[last_bits % table_size] = target;
-				}
-		}
-		else{ // prediction is not taken
-			if(behavior == "T"){ // even though the prediction is wrong but we need to update BTB
-				total++;
-				bimodal[last_bits % table_size] = 0;
-				prediction = BTB[last_bits % table_size];
-				if(target == prediction){
-					correct++;
-				}
-				else if(target != prediction){
-					BTB[last_bits % table_size] = target;
-				}
-			}
-				// if prediction is NT and behavior is NT neither BTB nor biomdal need to be updated
+				BTB[last_bits % table_size] = target;
+				// update table
+				bimodal[last_bits % table_size] = 1;
 			}
 		}
-		total++;
 	}
-	string str = to_string(correct) + "," + to_string(total); + "; ";
+	string str = to_string(correct) + ", " + to_string(total) + "; ";
 	return str;
 }
 
