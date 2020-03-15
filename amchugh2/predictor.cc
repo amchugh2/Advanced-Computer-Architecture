@@ -379,95 +379,64 @@ string BTB(char *file){
 	int prediction;
 	int correct = 0;
 	int total = 0;
+	unsigned long long BTB_prediction;
+	unsigned long long PC_prediction;
 
 	// init tables
 	int bimodal[table_size];
 	unsigned long long BTB[table_size];
 	for(int i = 0; i < table_size; i++){
 		bimodal[i] = 1; // taken
-		BTB[i] = 0; // not really sure what to initialize here 
+		BTB[i] = 0; 
 	}
 
 	// read input
 	while(getline(infile,line)){
 		stringstream s(line);
 		s >> std::hex >> addr >> behavior >> std::hex >> target;
+		// indexing is correct
 		last_bits = (addr & ((1 << ((int)log2(table_size))) - 1));
 		if(bimodal[last_bits % table_size] == 1){ // taken
 			// don't need to update bimodal
 			if(behavior == "T"){ // get BTB
 				total++;
-				cout << "before first comp" << endl;
-				//issue: nothing with BTB[addr]
-				if(target == BTB[addr ^ table_size]){
-				cout << "after first comp" << endl;
+				// read BTB
+				BTB_prediction = BTB[last_bits % table_size];
+				if(target == BTB_prediction){
 					correct++;
 				}
 				//cout << "before first != comp" << endl;
-				else if(target != BTB[addr]){
-					BTB[addr] = target;
+				else if(target != BTB[last_bits % table_size]){
+					BTB[last_bits % table_size] = target;
 				}
 			}
 			else if(behavior == "NT"){
 				bimodal[last_bits % table_size] = 0;
-			}
+				// get prediction by PC + 4
+				PC_prediction = (addr + 0x4);
+				if(target == PC_prediction){
+					correct++;
+				}
+				else if(target != PC_prediction){
+					BTB[last_bits % table_size] = target;
+				}
 		}
 		else{ // prediction is not taken
 			if(behavior == "T"){ // even though the prediction is wrong but we need to update BTB
 				total++;
 				bimodal[last_bits % table_size] = 0;
-				if(target == BTB[addr]){
+				prediction = BTB[last_bits % table_size];
+				if(target == prediction){
 					correct++;
 				}
-				else if(target != BTB[addr]){
-					BTB[addr] = target;
-				}
-			}
-			// if prediction is NT and behavior is NT neither BTB nor biomdal need to be updated
-		}
-		/*
-		if(bimodal[last_bits % table_size] == 1){ // taken
-			if(behavior == "T"){ // taken
-				total++; // add to total
-				// if target address = actual address
-				bimodal[last_bits % table_size] = 1;
-
-				// below line is giving me error
-				cout << "target = BTB not working" << endl;
-				if(target == BTB[last_bits % table_size]){
-				cout << "solved BTB to target comparison" << endl;	
-					correct++;
-				}
-				else if(target != BTB[addr]){
+				else if(target != prediction){
 					BTB[last_bits % table_size] = target;
 				}
 			}
-			
-			else if(behavior == "NT"){ // not taken, wrong
-				// don't do anything to BTB just update bimodal
-				bimodal[last_bits % table_size] = 0;
+				// if prediction is NT and behavior is NT neither BTB nor biomdal need to be updated
 			}
 		}
-		// prediction is not taken
-		if(bimodal[last_bits % table_size] == 0){
-			if(behavior == "T"){ // wrong, but need to update BTB
-				total++; // add to total
-				bimodal[last_bits % table_size] = 1;
-				if(target == BTB[last_bits % table_size]){ // correct address prediction
-					correct++;
-				}
-				else if(target != BTB[last_bits % table_size]){
-					BTB[last_bits % table_size] = target;
-				}
-			}
-			else if(behavior == "NT") { // right
-				// update bimodal
-				bimodal[last_bits % table_size] = 0;
-				// basically does nothing but hey why not
-			}
-		}
-		*/
-			total++;
+		total++;
 	}
 	string str = to_string(correct) + "," + to_string(total); + "; ";
 	return str;
@@ -527,6 +496,6 @@ int main(int argc, char *argv[]){
 
        	cout << "BTB" << endl;
 	cout << BTB(argv[1]) << endl;
-	//file.close();
+	//file.close()
 	return 0;
 }
