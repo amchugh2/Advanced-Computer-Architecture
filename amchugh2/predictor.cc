@@ -277,8 +277,8 @@ int tournament(char* file){
 				bimodal[pc_index] = 3;
 				bimodal_correct = true;
 			}
-			else if(behavior == "NT"){
-				bimodal[pc_index]-=1;
+			else if(behavior == "NT"){ //incorrect
+				bimodal[pc_index] -=1;
 			}
 		}
 		else if(bimodal[pc_index] == 0 || bimodal[pc_index] == 1){
@@ -366,64 +366,58 @@ int tournament(char* file){
 // use PC to index into BTB
 // if PC prediction != actual branch, misprediction -> write correct into table
 string BTB(char *file){
-	// init reading from file
-	string behavior;
-	string line;
-	ifstream infile(file);
-
-	// init variables
+	// initialize variables
 	unsigned long long addr;
 	unsigned long long target;
-	int table_size = 512;
-	int last_bits;
-	int prediction;
+	string behavior;
+	string line;
 	int correct = 0;
 	int total = 0;
-	//unsigned long long BTB_prediction;
-	//unsigned long long PC_prediction;
+	int table_size = 512;
+	int last_bits;
+	int index;
 
-	// init tables
+	// initialize tables
 	int bimodal[table_size];
 	unsigned long long BTB[table_size];
 	for(int i = 0; i < table_size; i++){
-		bimodal[i] = 1; // taken
-		BTB[i] = 0; 
+		bimodal[i] = 1;
+		BTB[i] = 0;
 	}
-
 	// read input
+	ifstream infile(file);
 	while(getline(infile,line)){
 		stringstream s(line);
 		s >> std::hex >> addr >> behavior >> std::hex >> target;
-		// indexing is correct
 		last_bits = (addr & ((1 << ((int)log2(table_size))) - 1));
-		if(bimodal[last_bits % table_size] == 1){ // predict taken
-			total = total + 1; // increment BTB access
-			// check if target is in BTB
-			if(target == BTB[last_bits % table_size]){
-				correct = correct + 1;
+		index = last_bits % table_size;
+		if(bimodal[index] == 1){ // taken
+			total+=1;
+			if(BTB[index] == target){
+				correct+=1;
 			}
-			//if(behavior == "T"){ // put target address from trace in BTB
-			//	BTB[last_bits % table_size] = target;
-			} // update bimodal table if prediction is wrong
+			if(behavior == "T"){
+				BTB[index] = target;
+			}
 			else{
-				bimodal[last_bits % table_size] = 0;
+				bimodal[index] = 0;
 			}
 		}
-		else if(bimodal[addr % table_size] == 0){ // predict not taken
-			if(behavior == "T"){
-				// read BTB
-				BTB[last_bits % table_size] = target;
-				// update table
-				bimodal[last_bits % table_size] = 1;
+		else if(bimodal[index] == 0){ // not taken
+			if(behavior == "T"){ 
+				bimodal[index] = 1;
+				BTB[index] = target;
 			}
 		}
 	}
-	string str = to_string(correct) + ", " + to_string(total) + "; ";
+	string str = to_string(correct) + "," + to_string(total) + "; ";
 	return str;
 }
 
+ 
+
 int main(int argc, char *argv[]){
-	// get total number of lines for tournament predictor
+	// get ttal number of lines for tournament predictor
 	string line;
 	int total = 0;
 	ifstream infile(argv[1]);
@@ -477,5 +471,5 @@ int main(int argc, char *argv[]){
        	cout << "BTB" << endl;
 	cout << BTB(argv[1]) << endl;
 	//file.close()
-	return 0;
+	//return 0;
 }
