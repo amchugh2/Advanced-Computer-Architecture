@@ -367,15 +367,15 @@ int tournament(char* file){
 // if PC prediction != actual branch, misprediction -> write correct into table
 string BTB(char *file){
 	// initialize variables
-	unsigned long long addr;
-	unsigned long long target;
+	unsigned long long addr = 0;
+	unsigned long long target = 0;
 	string behavior;
 	string line;
 	int correct = 0;
 	int total = 0;
 	int table_size = 512;
-	int last_bits;
-	int index;
+	int last_bits = 0;
+	int index = 0;
 
 	// initialize tables
 	int bimodal[table_size];
