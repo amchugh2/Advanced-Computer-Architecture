@@ -413,7 +413,6 @@ string BTB(char *file){
 	string str = to_string(correct) + "," + to_string(total) + "; ";
 	return str;
 }
-
  
 
 int main(int argc, char *argv[]){
