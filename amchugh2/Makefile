@@ -1,6 +1,6 @@
-TARGET = predictor
+TARGET = predictors
 
-OFILES = predictor.o
+OFILES = predictors.o
 
 CXX = g++
 CFLAGS = -g -Wall -std=c++17
@@ -13,6 +13,6 @@ $(TARGET):	$(OFILES)
 clean:
 	rm -f *~ $(OFILES) $(TARGET)
 
-predictor.o:	predictor.cc
+predictor.o:	predictors.cc
 
-TARGET:		predictor.o predictor.cc
+TARGET:		predictors.o predictors.cc
