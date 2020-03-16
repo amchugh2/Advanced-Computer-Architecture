@@ -36,7 +36,7 @@ string always_taken(char* file){
 		}
 	total = total + 1;
 	}
-	string str = to_string(correct) + "," + to_string(total) + "; ";
+	string str = to_string(correct) + "," + to_string(total) + ";";
 	return str;
 }
 
@@ -60,7 +60,7 @@ string never_taken(char *file){
 		}
 	total++;
 	}
-	string str = to_string(correct) + "," + to_string(total) + "; ";
+	string str = to_string(correct) + "," + to_string(total) + ";";
 	return str;
 }
 
@@ -114,7 +114,7 @@ string bimodal_single_bit(int table_size, char *file){
 		}
 		total++;
 	}
-	string str = to_string(correct) + "," + to_string(total) + "; ";
+	string str = to_string(correct) + "," + to_string(total) + ";";
 	return str;
 }
 // Predictor 4: Binomial Double Bit
@@ -165,7 +165,7 @@ string bimodal_double_bit(int table_size, char *file){
 		}
 		total++;
 	}
-	string str = to_string(correct) + "," + to_string(total) + "; ";
+	string str = to_string(correct) + "," + to_string(total) + ";";
 	return str;
 }
 
@@ -221,7 +221,7 @@ string gshare(unsigned int GHL, char *file){
 		}
 	total++;
 	}
-	string str = to_string(correct) + "," + to_string(total) + "; ";
+	string str = to_string(correct) + "," + to_string(total) + ";";
 	return str;
 }
 
@@ -325,6 +325,7 @@ int tournament(char* file){
 		// 3. IF PREFER PREDICTOR
 		// 	A. PREDICTION TRUE: SET TO 0 (GSHARE) OR 3 (BIMODAL)
 		// 	B. PREDICTION FALSE: INCREMENT (GSHARE WRONG) / DECREMENT (BIMODAL WRONG)
+		// if both are same: do nothing
 		if(gshare_correct && bimodal_correct){
 			correct++;
 			continue;
@@ -410,7 +411,7 @@ string BTB(char *file){
 			}
 		}
 	}
-	string str = to_string(correct) + "," + to_string(total) + "; ";
+	string str = to_string(correct) + "," + to_string(total) + ";";
 	return str;
 }
  
@@ -426,49 +427,46 @@ int main(int argc, char *argv[]){
 		++total;
 	}
 
-	/*	
 	ofstream file;
-	file.open("output.txt");
+	file.open(argv[2]);
 	// Always Taken
 	file << always_taken(argv[1]) << endl;
 	// Never Taken
 	file << never_taken(argv[1]) << endl;
 	// Bimodal Single Bit
-	file << bimodal_single_bit(16, argv[1]);
-	file << bimodal_single_bit(32, argv[1]);
-	file << bimodal_single_bit(128, argv[1]);
-	file << bimodal_single_bit(256, argv[1]);
-	file << bimodal_single_bit(512, argv[1]);
-	file << bimodal_single_bit(1024, argv[1]);
+	file << bimodal_single_bit(16, argv[1]) << " ";
+	file << bimodal_single_bit(32, argv[1]) << " ";
+	file << bimodal_single_bit(128, argv[1]) << " ";
+	file << bimodal_single_bit(256, argv[1]) << " ";
+	file << bimodal_single_bit(512, argv[1]) << " ";
+	file << bimodal_single_bit(1024, argv[1]) << " ";
 	file << bimodal_single_bit(2048, argv[1]) << endl;
 		
 	// Bimodal Double Bit
-	file << bimodal_double_bit(16, argv[1]);
-	file << bimodal_double_bit(32, argv[1]);
-	file << bimodal_double_bit(128, argv[1]);
-	file << bimodal_double_bit(256, argv[1]);
-	file << bimodal_double_bit(512, argv[1]);
-	file << bimodal_double_bit(1024, argv[1]);
+	file << bimodal_double_bit(16, argv[1]) << " ";
+	file << bimodal_double_bit(32, argv[1]) << " ";
+	file << bimodal_double_bit(128, argv[1]) << " ";
+	file << bimodal_double_bit(256, argv[1]) << " ";
+	file << bimodal_double_bit(512, argv[1]) << " ";
+	file << bimodal_double_bit(1024, argv[1]) << " ";
 	file << bimodal_double_bit(2048, argv[1]) << endl;
 	
 	// GShare
-	file << gshare(3, argv[1]);
-	file << gshare(4, argv[1]);
-	file << gshare(5, argv[1]);
-	file << gshare(6, argv[1]);
-	file << gshare(7, argv[1]);
-	file << gshare(8, argv[1]);
-	file << gshare(9, argv[1]);
-	file << gshare(10, argv[1]);
+	file << gshare(3, argv[1]) << " ";
+	file << gshare(4, argv[1]) << " ";
+	file << gshare(5, argv[1]) << " ";
+	file << gshare(6, argv[1]) << " ";
+	file << gshare(7, argv[1]) << " ";
+	file << gshare(8, argv[1]) << " ";
+	file << gshare(9, argv[1]) << " ";
+	file << gshare(10, argv[1]) << " ";
 	file << gshare(11, argv[1]) << endl;
 
 	// Tournament
 	file << tournament(argv[1]) << "," << total << ";" << endl;
 
-	*/
-
-       	cout << "BTB" << endl;
-	cout << BTB(argv[1]) << endl;
-	//file.close()
-	//return 0;
+       	// BTB
+	file << BTB(argv[1]) << endl;
+	file.close();
+	return 0;
 }
