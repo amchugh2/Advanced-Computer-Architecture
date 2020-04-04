@@ -19,18 +19,14 @@ using namespace std;
 // Return CORRECT: NUMBER OF CORRECT PREDICTIONS FROM EACH BRANCH
 // Predictor #1: Always Taken
 // Read in entire file as input, because line doesn't matter each prediction will be same
-string always_taken(char* file){
+string always_taken(vector<pair<unsigned long long, string>> branches){
+	int correct = 0;
+	int total = 0;
 	unsigned long long addr;
-	string behavior, line;
-	unsigned long long target;
-	int correct, total;
-	correct = 0;
-	total = 0;
-	ifstream infile(file);
-	
-	while(getline(infile,line)){
-		stringstream s(line);
-		s >> std::hex >> addr >> behavior >> std::hex >> target;
+	string behavior;
+	for(pair<unsigned long long, string> branch: branches){
+		addr = branch.first;
+		behavior = branch.second;
 		if(behavior == "T"){
 			correct = correct + 1;
 		}
@@ -42,19 +38,15 @@ string always_taken(char* file){
 
 // Predictor #2: Never Taken
 // Same concept as AT - > Do not need to calculate anything because always NT
-string never_taken(char *file){
+string never_taken(vector<pair<unsigned long long, string>> branches){
+	int correct = 0;
+	int total = 0;
 	unsigned long long addr;
-	string behavior, line;
-	unsigned long long target;
-	int correct, total;
-	correct = 0;
-	total = 0;
-	ifstream infile(file);
-	
-	while(getline(infile,line)){
-		stringstream s(line);
-		s >> std::hex >> addr >> behavior >> std::hex >> target;
-		//cout << behavior << endl;
+	string behavior;
+
+	for(pair<unsigned long long, string> branch : branches){
+		addr = branch.first;
+		behavior = branch.second;
 		if(behavior == "NT"){
 			correct++;
 		}
@@ -68,20 +60,16 @@ string never_taken(char *file){
 // Must hard-code in table size -> will be passed on as parameter
 // Assume initial state of all prediction counters is Taken ("T")
 // input: test to compare with, unsigned long PC, size of table
-string bimodal_single_bit(int table_size, char *file){
+string bimodal_single_bit(int table_size, vector<pair<unsigned long long, string>> branches){
 	// Open file for reading 
 	// Initialize vars
-	unsigned long long addr;
-	string behavior, line;
-	unsigned long long target;
-	int correct, total;
-	correct = 0;
-	total = 0;
+	int correct = 0;
+	int total = 0;
 	int index;
 	string prediction;
 	int last_bits;
-
-	ifstream infile(file);
+	unsigned long long addr;
+	string behavior;
 
 	string table[table_size];
 	for(int i = 0; i < table_size; i++){
@@ -89,9 +77,9 @@ string bimodal_single_bit(int table_size, char *file){
 	}
 
 	// get index
-	while(getline(infile,line)){
-		stringstream s(line);
-		s >> std::hex >> addr >> behavior >> std::hex >> target;		
+	for(pair<unsigned long long, string> branch : branches){
+		addr = branch.first;
+		behavior = branch.second;		
 		last_bits = (addr & ((1 << ((int)log2(table_size))) - 1));
 		if(behavior == "T"){
 			if(table[last_bits % table_size] == "T"){
@@ -118,20 +106,16 @@ string bimodal_single_bit(int table_size, char *file){
 	return str;
 }
 // Predictor 4: Binomial Double Bit
-string bimodal_double_bit(int table_size, char *file){
+string bimodal_double_bit(int table_size, vector<pair<unsigned long long, string>> branches){
 	// Open file for reading 
 	// Initialize vars
 	unsigned long long addr;
-	string behavior, line;
-	unsigned long long target;
-	int correct, total;
-	correct = 0;
-	total = 0;
+	string behavior;
+	int correct = 0;
+	int total = 0;
 	int index;
 	int prediction;
 	int last_bits;
-
-	ifstream infile(file);
 
 	int table[table_size];
 	for(int i = 0; i < table_size; i++){
@@ -139,10 +123,9 @@ string bimodal_double_bit(int table_size, char *file){
 	}
 
 	// get index
-	while(getline(infile,line)){
-		stringstream s(line);
-		s >> std::hex >> addr >> behavior >> std::hex >> target;
-
+	for(pair<unsigned long long, string> branch : branches){
+		addr = branch.first;
+		behavior = branch.second;
 		last_bits = (addr & ((1 << ((int)log2(table_size))) - 1));
 		// strongly or weakly not taken
 		if(behavior == "T"){
@@ -170,10 +153,10 @@ string bimodal_double_bit(int table_size, char *file){
 }
 
 // Predictor 5: Gshare -> PC XOR'd with GHR to generate index. Fix table size at 2048. 
-string gshare(unsigned int GHL, char *file){
+string gshare(unsigned int GHL, vector<pair<unsigned long long, string>> branches){
 	// initialize variables
-	int correct;
-	int total;
+	int correct = 0;
+	int total = 0;
 	// fixed table size at 2048
 	int table_size = 2048;
 	int table[table_size];
@@ -183,20 +166,14 @@ string gshare(unsigned int GHL, char *file){
 	}
 
 	unsigned long long addr;
-	unsigned long long target;
 	string behavior;
-	string line;
 	int prediction;
 	int last_bits;
-	correct = 0;
-	total = 0;
 	unsigned int GHR = 0;
-	
-	ifstream infile(file);
 
-	while(getline(infile,line)){
-		stringstream s(line);
-		s >> std::hex >> addr >> behavior >> std::hex >> target;
+	for(pair<unsigned long long, string> branch : branches){
+		addr = branch.first;
+		behavior = branch.second;
 		int index = ((GHR ^ addr) % table_size);
 		if(behavior == "T"){
 			if(table[index] == 0 || table[index] == 1){
@@ -225,7 +202,7 @@ string gshare(unsigned int GHL, char *file){
 	return str;
 }
 
-int tournament(char* file){
+int tournament(vector<pair<unsigned long long, string>> branches){
 	//initialize tables
 	int table_size = 2048;
 	int bimodal[table_size];
@@ -243,19 +220,16 @@ int tournament(char* file){
 	int GHR = 0;
 	int GHL = 11;
 	string behavior;
-	string line;
 	unsigned long long addr;
-	unsigned long long target;
 	bool bimodal_correct = false;
 	bool gshare_correct = false;
 	int gshare_index;
 	int pc_index;
 
 	// get input
-	ifstream infile(file);
-	while(getline(infile,line)){
-		stringstream s(line);
-		s >> std::hex >> addr >> behavior >> std::hex >> target;
+	for(pair<unsigned long long, string> branch : branches){
+		addr = branch.first;
+		behavior = branch.second;
 		// to be used later
 		bool bimodal_correct = false;
 		bool gshare_correct = false;
@@ -366,10 +340,10 @@ int tournament(char* file){
 // if actual behavior = taken -> BTB is updated with the correct branch target
 // use PC to index into BTB
 // if PC prediction != actual branch, misprediction -> write correct into table
-string BTB(char *file){
+string BTB(char* file){
 	// initialize variables
-	unsigned long long addr = 0;
-	unsigned long long target = 0;
+	unsigned long long addr;
+	unsigned long long target;
 	string behavior;
 	string line;
 	int correct = 0;
@@ -390,82 +364,90 @@ string BTB(char *file){
 	while(getline(infile,line)){
 		stringstream s(line);
 		s >> std::hex >> addr >> behavior >> std::hex >> target;
-		last_bits = (addr & ((1 << ((int)log2(table_size))) - 1));
-		index = last_bits % table_size;
-		if(bimodal[index] == 1){ // taken
-			total+=1;
-			if(BTB[index] == target){
-				correct+=1;
+			last_bits = (addr & ((1 << ((int)log2(table_size))) - 1));
+			index = last_bits % table_size;
+			if(bimodal[index] == 1){ // taken
+				total+=1;
+				if(BTB[index] == target){
+					correct+=1;
+				}
+				if(behavior == "T"){
+					BTB[index] = target;
+				}
+				else{
+					bimodal[index] = 0;
+				}
 			}
-			if(behavior == "T"){
-				BTB[index] = target;
-			}
-			else{
-				bimodal[index] = 0;
+			else if(bimodal[index] == 0){ // not taken
+				if(behavior == "T"){ 
+					bimodal[index] = 1;
+					BTB[index] = target;
+				}
 			}
 		}
-		else if(bimodal[index] == 0){ // not taken
-			if(behavior == "T"){ 
-				bimodal[index] = 1;
-				BTB[index] = target;
-			}
-		}
-	}
 	string str = to_string(correct) + "," + to_string(total) + ";";
 	return str;
 }
  
 
 int main(int argc, char *argv[]){
-	// get ttal number of lines for tournament predictor
-	string line;
+	// get total number of lines for tournament predictor
 	int total = 0;
+	unsigned long long addr;
+	string behavior, line;
+	unsigned long long target;
+	vector<pair<unsigned long long, string>> branches;
+
 	ifstream infile(argv[1]);
-	
+
 	while(getline(infile,line)){
 		stringstream s(line);
 		++total;
+		s >> std::hex >> addr >> behavior >> std::hex >> target;
+		branches.push_back(make_pair(addr, behavior));
 	}
 
 	ofstream file;
 	file.open(argv[2]);
+
 	// Always Taken
-	file << always_taken(argv[1]) << endl;
+	file << always_taken(branches) << endl;
 	// Never Taken
-	file << never_taken(argv[1]) << endl;
+	file << never_taken(branches) << endl;
+
 	// Bimodal Single Bit
-	file << bimodal_single_bit(16, argv[1]) << " ";
-	file << bimodal_single_bit(32, argv[1]) << " ";
-	file << bimodal_single_bit(128, argv[1]) << " ";
-	file << bimodal_single_bit(256, argv[1]) << " ";
-	file << bimodal_single_bit(512, argv[1]) << " ";
-	file << bimodal_single_bit(1024, argv[1]) << " ";
-	file << bimodal_single_bit(2048, argv[1]) << endl;
+	file << bimodal_single_bit(16, branches) << " ";
+	file << bimodal_single_bit(32, branches) << " ";
+	file << bimodal_single_bit(128, branches) << " ";
+	file << bimodal_single_bit(256, branches) << " ";
+	file << bimodal_single_bit(512, branches) << " ";
+	file << bimodal_single_bit(1024, branches) << " ";
+	file << bimodal_single_bit(2048, branches) << endl;
+	
 		
 	// Bimodal Double Bit
-	file << bimodal_double_bit(16, argv[1]) << " ";
-	file << bimodal_double_bit(32, argv[1]) << " ";
-	file << bimodal_double_bit(128, argv[1]) << " ";
-	file << bimodal_double_bit(256, argv[1]) << " ";
-	file << bimodal_double_bit(512, argv[1]) << " ";
-	file << bimodal_double_bit(1024, argv[1]) << " ";
-	file << bimodal_double_bit(2048, argv[1]) << endl;
+	file << bimodal_double_bit(16, branches) << " ";
+	file << bimodal_double_bit(32, branches) << " ";
+	file << bimodal_double_bit(128, branches) << " ";
+	file << bimodal_double_bit(256, branches) << " ";
+	file << bimodal_double_bit(512, branches) << " ";
+	file << bimodal_double_bit(1024, branches) << " ";
+	file << bimodal_double_bit(2048, branches) << endl;
 	
 	// GShare
-	file << gshare(3, argv[1]) << " ";
-	file << gshare(4, argv[1]) << " ";
-	file << gshare(5, argv[1]) << " ";
-	file << gshare(6, argv[1]) << " ";
-	file << gshare(7, argv[1]) << " ";
-	file << gshare(8, argv[1]) << " ";
-	file << gshare(9, argv[1]) << " ";
-	file << gshare(10, argv[1]) << " ";
-	file << gshare(11, argv[1]) << endl;
-
+	file << gshare(3, branches) << " ";
+	file << gshare(4, branches) << " ";
+	file << gshare(5, branches) << " ";
+	file << gshare(6, branches) << " ";
+	file << gshare(7, branches) << " ";
+	file << gshare(8, branches) << " ";
+	file << gshare(9, branches) << " ";
+	file << gshare(10, branches) << " ";
+	file << gshare(11, branches) << endl;
+	
 	// Tournament
-	file << tournament(argv[1]) << "," << total << ";" << endl;
-
-       	// BTB
+	file << tournament(branches) << "," << total << ";" << endl;
+	
 	file << BTB(argv[1]) << endl;
 	file.close();
 	return 0;
