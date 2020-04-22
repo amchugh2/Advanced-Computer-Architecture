@@ -116,74 +116,59 @@ int setAssociative(vector<entry> entries, int ways) {
 
 int LRUFullyAssociative(vector<entry> entries){
 	int hits = 0;
-	// n - way associative cache
-	unsigned long ways = 65536 / 32;
-	struct Cache cache[ways];
-
-	// initialize cache
-	for(int i = 0; i < ways; i++){
+	unsigned long associativity = 16384/32;
+	struct cacheEntry cache[associativity];
+	//initialize values
+	for (int i = 0; i < associativity; i++){
 		cache[i].valid = 0;
 		cache[i].tag = 0;
 		cache[i].index = 0;
 		cache[i].lru = 0;
 	}
-
-	// loop
-	for(entry e : entries){
-		unsigned long tag = e.addr >> 5;
-		// no need for set index 
-		for(int i = 0; i < ways; i++){
-			// hit
-			if(cache[i].valid && cache[i].tag == tag){
+	//check for hits
+	for (entry e: entries){
+		unsigned long tag = e.address >> 5;
+		//set = (Block number) modulo (#sets in cache)
+		for (int i = 0; i < associativity; i++){
+			if (cache[i].valid && cache[i].tag == tag){
+				//cache hit!!
 				hits++;
-				for(int j = 0; j < ways; j++){
-					if(j != i){
-						cache[j].lru = cache[j].lru + 1;
-					}
-					else{
-						cache[j].lru = 0;
-					}
-					break;
+				for (int j = 0; j < associativity; j++){
+					if (j != i) cache[j].lru = cache[j].lru + 1;
+					else cache[j].lru = 0;
 				}
-			} // miss
-			else if(!cache[i].valid){
-				// write
+				break;
+			}
+			else if (!cache[i].valid){
 				cache[i].tag = tag;
 				cache[i].valid = 1;
-				for(int j = 0; j < ways; j++){
-					if(j != i){
-						cache[j].lru = cache[j].lru + 1;
-					}
-					else{
-						cache[j].lru = 0;
-					}
+				for (int j = 0; j < associativity; j++){
+					if (j != i) cache[j].lru = cache[j].lru + 1;
+					else cache[j].lru = 0;
 				}
 			}
-			// LRUreplacement policy
-			else if(i == (ways - 1)){
+			//Original LRU
+			else if (i == (associativity-1)){
 				int high = cache[i].lru;
-				int high_index = i;
-				for(int j = 0; j < ways; j++){
-					if(cache[j].lru > high){
+				int highIndex = i;
+				for (int j = 0; j < associativity; j++){
+					if (cache[j].lru > high){
 						high = cache[j].lru;
-						high_index = j;
+						highIndex = j;
 					}
 				}
-				cache[high_index].lru = 0;
-				for(int j = 0; j < ways; j++){
-					if(j != high_index){
-						cache[j].lru = cache[j].lru + 1;
-					}
-					else {
-						cache[j].lru = 0;
-					}
+				cache[highIndex].lru = 0;
+				for (int j = 0; j < associativity; j++){
+					if (j != highIndex) cache[j].lru = cache[j].lru + 1;
+					else cache[j].lru = 0;
 				}
-				cache[high_index].tag = tag;
-				cache[high_index].valid = 1;
+				cache[highIndex].tag = tag;
+				cache[highIndex].valid = 1;
 			}
 		}
 	}
 	return hits;
+
 }
 
 int main(int argc, char *argv[]){
