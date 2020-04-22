@@ -181,8 +181,80 @@ int LRUFullyAssociative(vector<entry> entries){
 }
 
 int HCFullyAssociative(vector<entry> entries){
+	/*
 	int hits = 0;
-	unsigned long ways = 16374/32;
+	unsigned long associativity = 16384/32;
+	struct Cache cache[associativity];
+	//initialize values
+	for (int i = 0; i < associativity; i++){
+		cache[i].valid = 0;
+		cache[i].tag = 0;
+		cache[i].index = 0;
+	}
+	
+	int hc[associativity - 1] = {0};
+	
+	//check for hits
+	for (entry e: entries){
+		unsigned long tag = e.addr >> 5;
+		int tagFound = 0;
+		int hitIndex = 0;
+		
+		//set = (Block number) modulo (#sets in cache)
+		for (int i = 0; i < associativity; i++){
+			if (cache[i].valid && cache[i].tag == tag){
+				//cache hit!!
+				hits++;
+				hitIndex = i;
+				tagFound = 1;
+				break;
+			}
+		}
+		
+		int newIndex = 0;
+		if (tagFound){
+			newIndex = hitIndex + associativity;
+			while (newIndex >= 0){
+				//right child
+				if (newIndex % 2 == 0){
+					newIndex = (newIndex - 2)/2;
+					hc[newIndex] = 1; 
+				}
+				//left child
+				else{
+					newIndex = (newIndex - 1)/2;
+					hc[newIndex] = 0; 
+				}
+			}
+		}
+		//cache miss
+		else{
+			while (newIndex < associativity){
+				//right child cold
+				if (hc[newIndex] == 0){
+					hc[newIndex] = 1;
+					newIndex = (newIndex * 2) + 2;
+				}
+				//left child cold
+				else{
+					hc[newIndex] = 0;
+					newIndex = (newIndex * 2) + 1;
+				}
+			}
+			
+			int cIndex = newIndex - associativity;
+			
+			cache[cIndex].valid = 1;
+			cache[cIndex].tag = tag;
+			
+		}
+	}
+	return hits;
+}
+*/
+
+	int hits = 0;
+	unsigned long ways = 16384/32;
 	// create cache structure
 	struct Cache cache[ways];
 
@@ -251,6 +323,8 @@ int HCFullyAssociative(vector<entry> entries){
 	}
 	return hits;
 }
+
+
 
 int main(int argc, char *argv[]){
 	
