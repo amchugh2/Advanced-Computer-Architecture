@@ -180,6 +180,78 @@ int LRUFullyAssociative(vector<entry> entries){
 
 }
 
+int HCFullyAssociative(vector<entry> entries){
+	int hits = 0;
+	unsigned long ways = 16374/32;
+	// create cache structure
+	struct Cache cache[ways];
+
+	// initialize values
+	for(int i = 0; i < ways; i++){
+		cache[i].tag = 0;
+		cache[i].valid = 0;
+		cache[i].index = 0;
+	}
+
+	// create and initialize hc to all 0s
+	int hc[ways - 1] = {0};
+
+	// loop
+	for(entry e : entries){
+		unsigned long tag = e.addr >> 5;
+		bool tag_found = false;
+		int hit_index = 0;
+
+		for(int i = 0; i < ways; i++){
+			// hit
+			if(cache[i].valid && cache[i].tag == tag){
+				hits+=1;
+				hit_index = i;
+				tag_found = true;
+				// don't update
+				break;
+			}
+		}
+
+		int new_index = 0;
+		if(tag_found == true){
+			new_index = hit_index + ways;
+			while(new_index >= 0){
+				// right child
+				if(new_index % 2 == 0){
+					new_index = (new_index - 2) / 2;
+					hc[new_index] = 1;
+				}
+				// left child
+				else{
+					new_index = (new_index - 1) / 2;
+					hc[new_index] = 0;
+				}
+			}
+		}
+
+		// cache misses
+		else {
+			while(new_index < ways){
+				// right child is cold
+				if(hc[new_index] == 0){
+					hc[new_index] = 1;
+					new_index = (new_index * 2) + 2;
+				}
+				else{
+					hc[new_index] = 0;
+					new_index = (new_index * 2) + 1;
+				}
+			}
+
+			int cold_index = new_index - ways;
+			cache[cold_index].valid = 1;
+			cache[cold_index].tag = tag;
+		}
+	}
+	return hits;
+}
+
 int main(int argc, char *argv[]){
 	
 	// read input
@@ -214,10 +286,14 @@ int main(int argc, char *argv[]){
 	outfile << setAssociative(entries, 8) << "," << entries.size() << "; ";
 	outfile << setAssociative(entries, 16) << "," << entries.size() << "; ";
 	outfile << endl;
+
+	// LRU Full-Associative
+	outfile << LRUFullyAssociative(entries) << "," << entries.size() << "; ";
+	return 0;
 	*/
 
-	// Full-Associative LRU
-	outfile << LRUFullyAssociative(entries) << "," << entries.size() << "; ";
+	// HC Fully-Associative 
+	outfile << HCFullyAssociative(entries) << ";" << entries.size() << "; ";
 	return 0;
 }
 
