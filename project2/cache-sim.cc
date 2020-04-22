@@ -116,51 +116,60 @@ int setAssociative(vector<entry> entries, int ways) {
 
 int LRUFullyAssociative(vector<entry> entries){
 	int hits = 0;
-	unsigned long associativity = 16384/32;
-	struct cacheEntry cache[associativity];
-	//initialize values
-	for (int i = 0; i < associativity; i++){
+	unsigned long ways = 16384/32;
+	struct Cache cache[ways];
+	
+	for (int i = 0; i < ways; i++){
 		cache[i].valid = 0;
 		cache[i].tag = 0;
 		cache[i].index = 0;
 		cache[i].lru = 0;
 	}
-	//check for hits
+	
 	for (entry e: entries){
-		unsigned long tag = e.address >> 5;
-		//set = (Block number) modulo (#sets in cache)
-		for (int i = 0; i < associativity; i++){
+		unsigned long tag = e.addr >> 5;
+		for (int i = 0; i < ways; i++){
 			if (cache[i].valid && cache[i].tag == tag){
-				//cache hit!!
 				hits++;
-				for (int j = 0; j < associativity; j++){
-					if (j != i) cache[j].lru = cache[j].lru + 1;
-					else cache[j].lru = 0;
+				for (int j = 0; j < ways; j++){
+					if (j != i){
+						cache[j].lru = cache[j].lru + 1;
+					}
+					else {
+						cache[j].lru = 0;
+					}
 				}
 				break;
 			}
 			else if (!cache[i].valid){
 				cache[i].tag = tag;
 				cache[i].valid = 1;
-				for (int j = 0; j < associativity; j++){
-					if (j != i) cache[j].lru = cache[j].lru + 1;
-					else cache[j].lru = 0;
+				for (int j = 0; j < ways; j++){
+					if (j != i) {
+						cache[j].lru = cache[j].lru + 1;
+					}
+					else{
+						cache[j].lru = 0;
+					}
 				}
 			}
-			//Original LRU
-			else if (i == (associativity-1)){
+			
+			else if (i == (ways-1)){
 				int high = cache[i].lru;
 				int highIndex = i;
-				for (int j = 0; j < associativity; j++){
+				for (int j = 0; j < ways; j++){
 					if (cache[j].lru > high){
 						high = cache[j].lru;
 						highIndex = j;
 					}
 				}
 				cache[highIndex].lru = 0;
-				for (int j = 0; j < associativity; j++){
-					if (j != highIndex) cache[j].lru = cache[j].lru + 1;
-					else cache[j].lru = 0;
+				for (int j = 0; j < ways; j++){
+					if (j != highIndex) {
+						cache[j].lru = cache[j].lru + 1;
+					}
+					else{ cache[j].lru = 0;
+					}
 				}
 				cache[highIndex].tag = tag;
 				cache[highIndex].valid = 1;
