@@ -227,78 +227,8 @@ int LRUFullyAssociative(vector<entry> entries){
 
 // still not working BRUHHH
 int HCFullyAssociative(vector<entry> entries){
-	int hits = 0;
-	unsigned long associativity = 16384/32;
-	struct cacheEntry cache[associativity];
-	//initialize values
-	for (int i = 0; i < associativity; i++){
-		cache[i].valid = 0;
-		cache[i].tag = 0;
-		cache[i].index = 0;
-	}
-	
-	int hc[associativity - 1] = {0};
-	
-	//check for hits
-	for (entry e: entries){
-		unsigned long tag = e.address >> 5;
-		int tagFound = 0;
-		int hitIndex = 0;
-		
-		//set = (Block number) modulo (#sets in cache)
-		for (int i = 0; i < associativity; i++){
-			if (cache[i].valid && cache[i].tag == tag){
-				//cache hit!!
-				hits++;
-				hitIndex = i;
-				tagFound = 1;
-				break;
-			}
-		}
-		
-		int newIndex = 0;
-		if (tagFound){
-			newIndex = hitIndex + associativity;
-			while (newIndex >= 0){
-				//right child
-				if (newIndex % 2 == 0){
-					newIndex = (newIndex - 2)/2;
-					hc[newIndex] = 1; 
-				}
-				//left child
-				else{
-					newIndex = (newIndex - 1)/2;
-					hc[newIndex] = 0; 
-				}
-			}
-		}
-		//cache miss
-		else{
-			while (newIndex < associativity){
-				//right child cold
-				if (hc[newIndex] == 0){
-					hc[newIndex] = 1;
-					newIndex = (newIndex * 2) + 2;
-				}
-				//left child cold
-				else{
-					hc[newIndex] = 0;
-					newIndex = (newIndex * 2) + 1;
-				}
-			}
-			
-			int cIndex = newIndex - associativity;
-			
-			cache[cIndex].valid = 1;
-			cache[cIndex].tag = tag;
-			
-		}
-	}
-	return hits;
-}
-
 	/*
-	* Hot - Cold Fully Associative Cache Steps
+	 * Hot - Cold Fully Associative Cache Steps
 	 * 1. Create cache with appropriate ways/sets
 	 * 2. Initialize cache
 	 * 3. Create hc cache and intialize to all 0s
@@ -320,9 +250,11 @@ int HCFullyAssociative(vector<entry> entries){
 	 * 		the new index is the child of the left child
 	 *
 	 * 	
-	 *
+	 */
+
 	int hits = 0;
 	unsigned long ways = 16384/32;
+	//int new_index;
 	// create cache structure
 	struct Cache cache[ways];
 
@@ -343,58 +275,49 @@ int HCFullyAssociative(vector<entry> entries){
 	for(entry e : entries){
 		unsigned long tag = e.addr >> 5;
 		bool tag_found = false;
-		int hit_index = 0;
+		int hit_index = -1;
 
 		for(int i = 0; i < ways; i++){
 			// hit
 			if(cache[i].valid && cache[i].tag == tag){
-				hits+=1;
+				hits++;
 				hit_index = i;
 				tag_found = true;
 				// don't update
 				break;
 			}
 		}
-
-		int new_index = 0;
-		if(tag_found == true){
-			new_index = hit_index + ways;
-			while(new_index >= 0){
-				// right child
-				if(new_index % 2 == 0){
-					new_index = (new_index - 2) / 2;
-					hc[new_index] = 1;
+		if(tag_found){
+			int hc_index = hit_index + 511;
+			while(hc_index != 0){
+				if(hc_index % 2 == 0){
+					hc_index = (hc_index - 2) / 2;
+					hc[hc_index] = 0;
 				}
-				// left child
-				else{
-					new_index = (new_index - 1) / 2;
-					hc[new_index] = 0;
+				else {
+					hc_index = (hc_index - 1) / 2;
+					hc[hc_index] = 1;
 				}
 			}
 		}
-
-		// cache misses
-		else {
-			while(new_index < ways){
-				// right child is cold
-				if(hc[new_index] == 0){
-					hc[new_index] = 1;
-					new_index = (new_index * 2) + 2;
+		else{ // miss
+			int hc_index = 0;
+			for(int j = 0; j < 9; j++){
+				if(hc[hc_index] == 0){
+					hc[hc_index] = 1;
+					hc_index = (hc_index * 2) + 1;
 				}
-				else{
-					hc[new_index] = 0;
-					new_index = (new_index * 2) + 1;
+				else {
+					hc[hc_index] = 0;
+					hc_index = (hc_index * 2) + 2;
 				}
 			}
-
-			int cold_index = new_index - ways;
-			cache[cold_index].valid = 1;
-			cache[cold_index].tag = tag;
+			cache[hc_index - 511].tag = tag;
+			cache[hc_index - 511].valid = true;
 		}
 	}
-	return hits;
+			return hits;
 }
-*/
 
 int noAllocationSA(vector<entry> entries, int ways){
 	/* No Allocation on Write Miss Set Associative Cache
