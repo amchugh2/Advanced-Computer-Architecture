@@ -227,7 +227,8 @@ int LRUFullyAssociative(vector<entry> entries){
 
 // still not working BRUHHH
 int HCFullyAssociative(vector<entry> entries){
-	/* Hot - Cold Fully Associative Cache Steps
+	/*
+	* Hot - Cold Fully Associative Cache Steps
 	 * 1. Create cache with appropriate ways/sets
 	 * 2. Initialize cache
 	 * 3. Create hc cache and intialize to all 0s
@@ -249,7 +250,7 @@ int HCFullyAssociative(vector<entry> entries){
 	 * 		the new index is the child of the left child
 	 *
 	 * 	
-	 */
+	 *
 	int hits = 0;
 	unsigned long ways = 16384/32;
 	// create cache structure
@@ -323,6 +324,7 @@ int HCFullyAssociative(vector<entry> entries){
 	}
 	return hits;
 }
+*/
 
 int noAllocationSA(vector<entry> entries, int ways){
 	/* No Allocation on Write Miss Set Associative Cache
