@@ -556,208 +556,6 @@ int NLPrefetchSA(vector<entry> entries, int ways){
 }
 
 int missPrefetchSA(vector<entry> entries, int ways){
-		int hits = 0;
-	//cachesize = 512
-	unsigned long cacheLines = 512/associativity;
-	struct cacheEntry cache[cacheLines][associativity];
-	//int lru[cacheLines][associativity];
-	//initialize values
-	for (int i = 0; i < cacheLines; i++){
-		for (int j = 0; j < associativity; j++){
-			cache[i][j].valid = 0;
-			cache[i][j].tag = 0;
-			cache[i][j].index = 0;
-			cache[i][j].lru = 0;
-		}
-	}
-	//check for hits
-	for (entry e: entries){
-		unsigned long tag = e.address >> 5;
-		//set = (Block number) modulo (#sets in cache)
-		unsigned long index = tag % cacheLines;
-		for (int i = 0; i < associativity; i++){
-			if (cache[index][i].valid && cache[index][i].tag == tag){
-				//cache hit!!
-				hits++;
-				for (int j = 0; j < associativity; j++){
-					if (j != i) cache[index][j].lru = cache[index][j].lru + 1;
-					else cache[index][j].lru = 0;
-				}
-				break;
-			}
-			else if (!cache[index][i].valid){
-				cache[index][i].tag = tag;
-				cache[index][i].valid = 1;
-				for (int j = 0; j < associativity; j++){
-					if (j != i) cache[index][j].lru = cache[index][j].lru + 1;
-					else cache[index][j].lru = 0;
-				}
-			}
-			else if (i == (associativity-1)){
-				int high = cache[index][i].lru;
-				int highIndex = i;
-				for (int j = 0; j < associativity; j++){
-					if (cache[index][j].lru > high){
-						high = cache[index][j].lru;
-						highIndex = j;
-					}
-				}
-				cache[index][highIndex].lru = 0;
-				for (int j = 0; j < associativity; j++){
-					if (j != highIndex) cache[index][j].lru = cache[index][j].lru + 1;
-					else cache[index][j].lru = 0;
-				}
-				cache[index][highIndex].tag = tag;
-				cache[index][highIndex].valid = 1;
-			}
-		//prefetching next line
-		}
-		index = (index + 1) %	cacheLines;
-		tag++;
-		for (int i = 0; i < associativity; i++){
-			if (cache[index][i].tag == tag){
-				//cache hit!!
-				for (int j = 0; j < associativity; j++){
-					if (j != i) cache[index][j].lru = cache[index][j].lru + 1;
-					else cache[index][j].lru = 0;
-				}
-				break;
-			}
-			else if (!cache[index][i].valid){
-				cache[index][i].tag = tag;
-				cache[index][i].valid = 1;
-				for (int j = 0; j < associativity; j++){
-					if (j != i) cache[index][j].lru = cache[index][j].lru + 1;
-					else cache[index][j].lru = 0;
-				}
-			}
-			else if (i == (associativity-1)){
-				int high = cache[index][i].lru;
-				int highIndex = i;
-				for (int j = 0; j < associativity; j++){
-					if (cache[index][j].lru > high){
-						high = cache[index][j].lru;
-						highIndex = j;
-					}
-				}
-				cache[index][highIndex].lru = 0;
-				for (int j = 0; j < associativity; j++){
-					if (j != highIndex) cache[index][j].lru = cache[index][j].lru + 1;
-					else cache[index][j].lru = 0;
-				}
-				cache[index][highIndex].tag = tag;
-				cache[index][highIndex].valid = 1;
-			}
-		}
-	}
-	return hits;
-}
-
-int missPrefetchSetAssociative(vector<entry> entries, int associativity){
-	int hits = 0;
-	int hit = 0;
-	//cachesize = 512
-	unsigned long cacheLines = 512/associativity;
-	struct cacheEntry cache[cacheLines][associativity];
-	//int lru[cacheLines][associativity];
-	//initialize values
-	for (int i = 0; i < cacheLines; i++){
-		for (int j = 0; j < associativity; j++){
-			cache[i][j].valid = 0;
-			cache[i][j].tag = 0;
-			cache[i][j].index = 0;
-			cache[i][j].lru = 0;
-		}
-	}
-	//check for hits
-	for (entry e: entries){
-		unsigned long tag = e.address >> 5;
-		//set = (Block number) modulo (#sets in cache)
-		unsigned long index = tag % cacheLines;
-		for (int i = 0; i < associativity; i++){
-			if (cache[index][i].valid && cache[index][i].tag == tag){
-				//cache hit!!
-				hits++;
-				hit = 1;
-				for (int j = 0; j < associativity; j++){
-					if (j != i) cache[index][j].lru = cache[index][j].lru + 1;
-					else cache[index][j].lru = 0;
-				}
-				break;
-			}
-			else if (!cache[index][i].valid){
-				hit = 0;
-				cache[index][i].tag = tag;
-				cache[index][i].valid = 1;
-				for (int j = 0; j < associativity; j++){
-					if (j != i) cache[index][j].lru = cache[index][j].lru + 1;
-					else cache[index][j].lru = 0;
-				}
-			}
-			else if (i == (associativity-1)){
-				hit = 0;
-				int high = cache[index][i].lru;
-				int highIndex = i;
-				for (int j = 0; j < associativity; j++){
-					if (cache[index][j].lru > high){
-						high = cache[index][j].lru;
-						highIndex = j;
-					}
-				}
-				cache[index][highIndex].lru = 0;
-				for (int j = 0; j < associativity; j++){
-					if (j != highIndex) cache[index][j].lru = cache[index][j].lru + 1;
-					else cache[index][j].lru = 0;
-				}
-				cache[index][highIndex].tag = tag;
-				cache[index][highIndex].valid = 1;
-			}
-		}
-
-		if (hit == 0){
-			//prefetching next line
-			int newIndex = (index + 1) %	cacheLines;
-			tag++;
-			for (int i = 0; i < associativity; i++){
-				if (cache[newIndex][i].tag == tag){
-					//cache hit!!
-					for (int j = 0; j < associativity; j++){
-						if (j != i) cache[newIndex][j].lru = cache[newIndex][j].lru + 1;
-						else cache[newIndex][j].lru = 0;
-					}
-					break;
-				}
-				else if (!cache[newIndex][i].valid){
-					cache[newIndex][i].tag = tag;
-					cache[newIndex][i].valid = 1;
-					for (int j = 0; j < associativity; j++){
-						if (j != i) cache[newIndex][j].lru = cache[newIndex][j].lru + 1;
-						else cache[newIndex][j].lru = 0;
-					}
-				}
-				else if (i == (associativity-1)){
-					int high = cache[newIndex][i].lru;
-					int highIndex = i;
-					for (int j = 0; j < associativity; j++){
-						if (cache[newIndex][j].lru > high){
-							high = cache[newIndex][j].lru;
-							highIndex = j;
-						}
-					}
-					cache[newIndex][highIndex].lru = 0;
-					for (int j = 0; j < associativity; j++){
-						if (j != highIndex) cache[newIndex][j].lru = cache[newIndex][j].lru + 1;
-						else cache[newIndex][j].lru = 0;
-					}
-					cache[newIndex][highIndex].tag = tag;
-					cache[newIndex][highIndex].valid = 1;
-				}
-			}
-		}
-	}
-	return hits;
-}
-	/*
 	int hits = 0;
 	bool is_hit = false;
 
@@ -835,9 +633,7 @@ int missPrefetchSetAssociative(vector<entry> entries, int associativity){
 		// for each way
 			for (int i = 0;	i < ways; i++){
 			// if the data is valid for the set and the tags match, hit
-				if (cache[updated_index][i].valid && cache[updated_index][i].tag == tag){
-				//cache hit!!
-					hits++;
+				if (cache[updated_index][i].tag == tag){
 				// if the way isn't recently used then increment it's value
 					for (int j = 0; j < ways; j++){
 						if (j != i) cache[updated_index][j].lru = cache[updated_index][j].lru + 1;
@@ -889,8 +685,7 @@ int missPrefetchSetAssociative(vector<entry> entries, int associativity){
 	}
 	return hits;
 }
-*/
-			
+
 int main(int argc, char *argv[]){
 	
 	// read input
@@ -910,46 +705,49 @@ int main(int argc, char *argv[]){
 		e.addr = addr;
 		entries.push_back(e);
 	}
+	// order:
+	// 1. direct mapped
+	// 2. set associaitve
+	// 3. fully associative LRU
+	// 4. fully associative hot cold
+	// 5. associative without store allocation
+	// 6. associative cache next line prefetch
+	// 7. associative cache next line prefetch misses
 	
-	/*
 	// Direct Mapped
 	outfile << directMapped(entries, 1024) << "," << entries.size() << "; ";
 	outfile << directMapped(entries, 4096) << "," << entries.size() << "; ";
 	outfile << directMapped(entries, 16384) << "," << entries.size() << "; ";
-	outfile << directMapped(entries, 32768) << "," << entries.size() << "; ";	
-	outfile << endl;
+	outfile << directMapped(entries, 32768) << "," << entries.size() << "; " << endl;
 
 	// Set-Associative
 	outfile << setAssociative(entries, 2) << "," << entries.size() << "; ";
 	outfile << setAssociative(entries, 4) << "," << entries.size() << "; ";
 	outfile << setAssociative(entries, 8) << "," << entries.size() << "; ";
-	outfile << setAssociative(entries, 16) << "," << entries.size() << "; ";
-	outfile << endl;
+	outfile << setAssociative(entries, 16) << "," << entries.size() << "; " << endl;
 
 	// LRU Full-Associative
-	outfile << LRUFullyAssociative(entries) << "," << entries.size() << "; ";
-	return 0;
+	outfile << LRUFullyAssociative(entries) << "," << entries.size() << "; " << endl;
 
 	// HC Fully-Associative NOT WORKING
-	outfile << HCFullyAssociative(entries) << ";" << entries.size() << "; ";
+	outfile << HCFullyAssociative(entries) << ";" << entries.size() << "; " << endl;
 
 	// Set- Associative Cache no Allocation on a Write Miss
 	outfile << noAllocationSA(entries, 2) << "," << entries.size() << "; ";
 	outfile << noAllocationSA(entries, 4) << "," << entries.size() << "; ";
 	outfile << noAllocationSA(entries, 8) << "," << entries.size() << "; ";
-	outfile << noAllocationSA(entries, 16) << "," << entries.size() << "; ";
+	outfile << noAllocationSA(entries, 16) << "," << entries.size() << "; " << endl;
 
 	outfile << NLPrefetchSA(entries, 2) << "," << entries.size() << "; ";
 	outfile << NLPrefetchSA(entries, 4) << "," << entries.size() << "; ";
 	outfile << NLPrefetchSA(entries, 8) << "," << entries.size() << "; ";
-	outfile << NLPrefetchSA(entries, 16) << "," << entries.size() << "; ";
+	outfile << NLPrefetchSA(entries, 16) << "," << entries.size() << "; " << endl;
 
-	*/
 
 	outfile << missPrefetchSA(entries, 2) << "," << entries.size() << "; ";
 	outfile << missPrefetchSA(entries, 4) << "," << entries.size() << "; ";
 	outfile << missPrefetchSA(entries, 8) << "," << entries.size() << "; ";
-	outfile << missPrefetchSA(entries, 16) << "," << entries.size() << "; ";
+	outfile << missPrefetchSA(entries, 16) << "," << entries.size() << "; " << endl;
 
 
 	return 0;
