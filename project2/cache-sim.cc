@@ -24,6 +24,15 @@ struct Cache {
 };
 
 int directMapped(vector<entry> entries, int cacheSize){
+	/* Direct Mapped Cache
+	 * 1. Initialize cache
+	 * 2. Loop through entries
+	 * 	If tags match and valid bit is 1: HIT
+	 * 		increment hits
+	 * 	Else miss
+	 * 		update cache and put entry in
+	 */
+
 	int hits = 0;
 	// assume each cache line size is 32 bytes
 	unsigned long cacheLines = cacheSize / 32;
@@ -57,7 +66,7 @@ int directMapped(vector<entry> entries, int cacheSize){
 
 int setAssociative(vector<entry> entries, int ways) {
 	/* Set Associative Steps:
-	 * PRIORITY QUEUE: higher cache blocks are the least recently used
+	 *  QUEUE: higher cache blocks are the least recently used
 	 * 1. Create cache structure with appropriate amount of ways and sets
 	 * 2. Initialize the cache structure
 	 * 3. Loop through each entry in the trace
@@ -110,9 +119,11 @@ int setAssociative(vector<entry> entries, int ways) {
 				hits++;
 				// if the way isn't recently used then increment it's value
 				for (int j = 0; j < ways; j++){
-					if (j != i) cache[index][j].lru = cache[index][j].lru + 1;
+					if (j != i){ cache[index][j].lru = cache[index][j].lru + 1;
+					}
 					// otherwise reset to 0
-					else cache[index][j].lru = 0;
+					else{ cache[index][j].lru = 0;
+					}
 				}
 				break;
 			}
@@ -123,8 +134,11 @@ int setAssociative(vector<entry> entries, int ways) {
 				cache[index][i].valid = 1;
 				// for the ways that weren't use, increment their LRU value
 				for (int j = 0; j < ways; j++){
-					if (j != i) cache[index][j].lru = cache[index][j].lru + 1;
-					else cache[index][j].lru = 0;
+					if (j != i){
+					       	cache[index][j].lru = cache[index][j].lru + 1;
+					}
+					else{ cache[index][j].lru = 0;
+					}
 				}
 			}
 			// LRU associativity
@@ -147,8 +161,11 @@ int setAssociative(vector<entry> entries, int ways) {
 				for (int j = 0; j < ways; j++){
 					// increment the rest of the ways because now they are less recently used than the previous least
 					// recently used
-					if (j != highIndex) cache[index][j].lru = cache[index][j].lru + 1;
-					else cache[index][j].lru = 0;
+					if (j != highIndex){
+					       	cache[index][j].lru = cache[index][j].lru + 1;
+						}
+					else{ cache[index][j].lru = 0;
+					}
 				}
 				// put the value in the least recently used block
 				cache[index][highIndex].tag = tag;
@@ -159,6 +176,7 @@ int setAssociative(vector<entry> entries, int ways) {
 	return hits;
 }
 
+/*
 int LRUFullyAssociative(vector<entry> entries){
 	int hits = 0;
 	unsigned long ways = 16384/32;
@@ -224,8 +242,8 @@ int LRUFullyAssociative(vector<entry> entries){
 	return hits;
 
 }
+*/
 
-// still not working BRUHHH
 int HCFullyAssociative(vector<entry> entries){
 	/*
 	 * Hot - Cold Fully Associative Cache Steps
@@ -365,9 +383,12 @@ int noAllocationSA(vector<entry> entries, int ways){
 				hits++;
 				// if the way isn't recently used then increment it's value
 				for (int j = 0; j < ways; j++){
-					if (j != i) cache[index][j].lru = cache[index][j].lru + 1;
+					if (j != i){
+					       	cache[index][j].lru = cache[index][j].lru + 1;
+					}
 					// otherwise reset to 0
-					else cache[index][j].lru = 0;
+					else{ cache[index][j].lru = 0;
+					}
 				}
 				break;
 			}
@@ -378,8 +399,11 @@ int noAllocationSA(vector<entry> entries, int ways){
 				cache[index][i].valid = 1;
 				// for the ways that weren't use, increment their LRU value
 				for (int j = 0; j < ways; j++){
-					if (j != i) cache[index][j].lru = cache[index][j].lru + 1;
-					else cache[index][j].lru = 0;
+					if (j != i){
+					       	cache[index][j].lru = cache[index][j].lru + 1;
+					}
+					else{ cache[index][j].lru = 0;
+					}
 				}
 			}
 			// LRU associativity
@@ -551,6 +575,15 @@ int NLPrefetchSA(vector<entry> entries, int ways){
 }
 
 int missPrefetchSA(vector<entry> entries, int ways){
+	/* Miss Prefetch SA
+	 * 1. Initialize is_hit
+	 * 2. Initialize cache as normal
+	 * 3. If hit, proceeed normally
+	 * 4. If miss: set is_hit to false
+	 * 5. If is_hit is false at end, prefetch
+	 * 6. Otherwise proceed as normally
+	 */
+
 	int hits = 0;
 	bool is_hit = false;
 
@@ -713,38 +746,39 @@ int main(int argc, char *argv[]){
 	outfile << directMapped(entries, 1024) << "," << entries.size() << "; ";
 	outfile << directMapped(entries, 4096) << "," << entries.size() << "; ";
 	outfile << directMapped(entries, 16384) << "," << entries.size() << "; ";
-	outfile << directMapped(entries, 32768) << "," << entries.size() << "; " << endl;
+	outfile << directMapped(entries, 32768) << "," << entries.size() << ";" << endl;
 
 	// Set-Associative
 	outfile << setAssociative(entries, 2) << "," << entries.size() << "; ";
 	outfile << setAssociative(entries, 4) << "," << entries.size() << "; ";
 	outfile << setAssociative(entries, 8) << "," << entries.size() << "; ";
-	outfile << setAssociative(entries, 16) << "," << entries.size() << "; " << endl;
+	outfile << setAssociative(entries, 16) << "," << entries.size() << ";" << endl;
+
+	// LRU Fully - Assosciative (we can just call set associative again) 
+	outfile << setAssociative(entries,512) << "," << entries.size() << ";" << endl;
 
 	// LRU Full-Associative
-	outfile << LRUFullyAssociative(entries) << "," << entries.size() << "; " << endl;
+	//outfile << LRUFullyAssociative(entries) << "," << entries.size() << ";" << endl;
 
 	// HC Fully-Associative NOT WORKING
-	outfile << HCFullyAssociative(entries) << ";" << entries.size() << "; " << endl;
+	outfile << HCFullyAssociative(entries) << "," << entries.size() << ";" << endl;
 
 	// Set- Associative Cache no Allocation on a Write Miss
 	outfile << noAllocationSA(entries, 2) << "," << entries.size() << "; ";
 	outfile << noAllocationSA(entries, 4) << "," << entries.size() << "; ";
 	outfile << noAllocationSA(entries, 8) << "," << entries.size() << "; ";
-	outfile << noAllocationSA(entries, 16) << "," << entries.size() << "; " << endl;
+	outfile << noAllocationSA(entries, 16) << "," << entries.size() << ";" << endl;
 
 	outfile << NLPrefetchSA(entries, 2) << "," << entries.size() << "; ";
 	outfile << NLPrefetchSA(entries, 4) << "," << entries.size() << "; ";
 	outfile << NLPrefetchSA(entries, 8) << "," << entries.size() << "; ";
-	outfile << NLPrefetchSA(entries, 16) << "," << entries.size() << "; " << endl;
+	outfile << NLPrefetchSA(entries, 16) << "," << entries.size() << ";" << endl;
 
 
 	outfile << missPrefetchSA(entries, 2) << "," << entries.size() << "; ";
 	outfile << missPrefetchSA(entries, 4) << "," << entries.size() << "; ";
 	outfile << missPrefetchSA(entries, 8) << "," << entries.size() << "; ";
-	outfile << missPrefetchSA(entries, 16) << "," << entries.size() << "; " << endl;
-
-
+	outfile << missPrefetchSA(entries, 16) << "," << entries.size() << ";" << endl;
 	return 0;
 }
 
